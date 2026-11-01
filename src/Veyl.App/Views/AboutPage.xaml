@@ -24,6 +24,22 @@
                 <c:StatTile x:Name="BuildTile" Label="Build" Margin="4" />
             </UniformGrid>
 
+            <TextBlock Text="Updates" Style="{StaticResource SectionTitle}" Margin="0,18,0,8" />
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="UpdateStatus" Style="{StaticResource Value}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="UpdateDetail" Style="{StaticResource Dim}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <Button x:Name="CheckButton" Grid.Column="1" Style="{StaticResource SoftAccentButton}" Content="Check for updates"
+                            Margin="12,0,0,0" VerticalAlignment="Center" Click="Check_Click" />
+                </Grid>
+            </Border>
+
             <TextBlock Text="What VEYL is and isn't" Style="{StaticResource SectionTitle}" Margin="0,18,0,8" />
             <Border Style="{StaticResource Card}">
                 <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap" TextTrimming="None" LineHeight="20">

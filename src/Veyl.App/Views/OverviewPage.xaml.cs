@@ -43,7 +43,13 @@ public partial class OverviewPage : UserControl, IRefreshable
             StatusTile.Value = $"Update available ({update})";
             StatusTile.ValueBrush = B("AccentBrush");
             UpdateBanner.Visibility = Visibility.Visible;
-            if (!_updating) UpdateText.Text = $"VEYL {update} is available.";
+            if (_downloadedVersion is not null && _downloadedVersion != update)
+            {
+                // A newer release appeared after the last download: start over with that one.
+                _downloaded = _downloadedVersion = null;
+                UpdateButton.Content = "Download and install";
+            }
+            if (!_updating && _downloaded is null) UpdateText.Text = $"VEYL {update} is available.";
         }
         else
         {
@@ -93,6 +99,7 @@ public partial class OverviewPage : UserControl, IRefreshable
 
     private bool _updating;
     private string? _downloaded;
+    private string? _downloadedVersion;
 
     private async void Update_Click(object sender, RoutedEventArgs e)
     {
@@ -116,6 +123,7 @@ public partial class OverviewPage : UserControl, IRefreshable
             AppServices.Activity.Add(LogKind.System, $"Update {remote.Version} downloaded", "SHA-256 matched the release manifest");
             Updater.StartSetup(setup);
             _downloaded = setup;
+            _downloadedVersion = remote.Version;
             UpdateButton.Content = "Open installer";
             UpdateButton.IsEnabled = true;
         }

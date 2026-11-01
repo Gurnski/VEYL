@@ -141,7 +141,7 @@ Feeds are any text file of hashes at a URL or path. The free public feeds I trie
 
 ### Updates
 
-GitHub Releases on [Gurnski/VEYL](https://github.com/Gurnski/VEYL) is the update server. Every build points at `https://github.com/Gurnski/VEYL/releases/latest/download/manifest.json` unless you pass `-UpdateUrl` (`-UpdateUrl ""` turns update checks off). The launcher fetches that file at start-up, and if its version is newer the app's Overview page shows a banner with "Download and install". That downloads `VEYL-Setup.exe` to `%TEMP%\VEYL-Update`, checks its SHA-256 against the release manifest, deletes it if it doesn't match, and starts it. The setup closes VEYL and updates in place.
+GitHub Releases on [Gurnski/VEYL](https://github.com/Gurnski/VEYL) is the update server. Every build points at `https://github.com/Gurnski/VEYL/releases/latest/download/manifest.json` unless you pass `-UpdateUrl` (`-UpdateUrl ""` turns update checks off). The launcher fetches that file at start-up, and the app fetches it again every 6 hours while it runs (About > "Check for updates" checks straight away). If its version is newer, there's one tray notification and the app's Overview page shows a banner with "Download and install". That downloads `VEYL-Setup.exe` to `%TEMP%\VEYL-Update`, checks its SHA-256 against the release manifest, deletes it if it doesn't match, and starts it. The setup closes VEYL and updates in place.
 
 To publish a release, bump `<Version>` in `src\Directory.Build.props`, commit and push, then run:
 

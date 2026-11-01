@@ -87,7 +87,8 @@ $manifest | Add-Member -NotePropertyName setupSize -NotePropertyValue (Get-Item 
 $releaseDir = Join-Path $root "dist\release"
 New-Item -ItemType Directory -Force $releaseDir | Out-Null
 $releaseManifest = Join-Path $releaseDir "manifest.json"
-$manifest | ConvertTo-Json -Depth 6 | Set-Content $releaseManifest -Encoding utf8
+# No byte-order mark: Windows PowerShell's utf8 adds one, and some JSON readers reject it.
+[IO.File]::WriteAllText($releaseManifest, ($manifest | ConvertTo-Json -Depth 6), (New-Object Text.UTF8Encoding $false))
 Write-Host "  setupSha256 $($manifest.setupSha256)"
 
 # ---------------------------------------------------------------- publish

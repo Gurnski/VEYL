@@ -11,6 +11,8 @@ public static class AppServices
     public static ScanService Scan { get; } = new();
     public static RealtimeService Realtime { get; } = new();
     public static SandboxService Sandbox { get; } = new();
+    public static UpdateChecker Updates { get; } = new();
+    private static readonly CancellationTokenSource Stopping = new();
     public static VaultService Vault { get; private set; } = null!;
     public static TrayIcon? Tray { get; set; }
     public static Manifest? Manifest { get; private set; }
@@ -36,6 +38,7 @@ public static class AppServices
         Scanner.Init(VeylPaths.SignatureFile, Settings.UseAmsi);
         Scanner.LoadCache(VeylPaths.ScanCacheFile);
         Realtime.Apply(Settings);
+        Updates.Start(Stopping.Token);
     }
 
     public static void ReloadSignatures()
@@ -52,6 +55,7 @@ public static class AppServices
 
     public static void Stop()
     {
+        Stopping.Cancel();
         Scan.Stop();
         Sandbox.StopAll();
         Realtime.Dispose();

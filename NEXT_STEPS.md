@@ -10,14 +10,14 @@ Picked from TODO.md for the next session. TODO.md has the full list.
 - Native tests cover packs. A throwaway C# program also checked the P/Invoke wrappers end to end. `dist\VEYL-Setup.exe` is rebuilt with all of this.
 - Not tested: the Windows 10 path for removing a pack another user's VEYL still has open (it gets renamed to `.removed`). This PC is Windows 11, which just deletes it.
 
-## Updates from GitHub: done, not yet live
+## Updates from GitHub: live
 
 - Builds now check `releases/latest/download/manifest.json` on Gurnski/VEYL by default.
 - `release.ps1` builds and publishes a release with `VEYL-Setup.exe` and a manifest that carries the installer's SHA-256.
 - The Overview banner has "Download and install". A throwaway test against a local server passed all seven cases: a good 142 MB download, a wrong hash (file deleted), same version, no hash, plain http, a missing manifest and no update address.
 - Not tested: starting the downloaded setup through Explorer (so the setup isn't in VEYL's process tree when it closes VEYL), and the whole flow against real GitHub. That needs the repo public and two releases, e.g. 0.2.0 installed and 0.2.1 published.
-- The copy installed on this PC has no update address, so it won't see releases until a build made after this is installed.
-- First time: `gh auth login`, then `.\release.ps1`.
+- v0.2.0 is published and the repo is public. VEYL reads the live manifest correctly.
+- The app checks again every 6 hours while running, with one tray notification per new version, and About has "Check for updates". Not seen running yet, since the installed copy predates it.
 
 ## Detection: still to do
 
