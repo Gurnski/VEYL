@@ -1,0 +1,124 @@
+<UserControl x:Class="Veyl.App.Views.OverviewPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Veyl.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Text="Overview" Style="{StaticResource H1}" Margin="0,0,0,16" />
+
+            <!-- Update banner -->
+            <Border x:Name="UpdateBanner" Style="{StaticResource Card}" Background="{StaticResource AccentSoftBrush}"
+                    Margin="0,0,0,8" Visibility="Collapsed">
+                <Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE896;" Style="{StaticResource Icon}" Foreground="{StaticResource AccentBrush}" />
+                        <TextBlock x:Name="UpdateText" Style="{StaticResource BaseText}" FontWeight="SemiBold" Margin="10,0,0,0"
+                                   Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Account" Style="{StaticResource Label}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <Border Width="22" Height="22" CornerRadius="11" Background="{StaticResource RaisedBrush}">
+                                <TextBlock x:Name="AvatarText" Style="{StaticResource BaseText}" FontSize="10.5" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock x:Name="AccountText" Style="{StaticResource Value}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <c:StatTile x:Name="PrivilegeTile" Grid.Column="2" Label="Privileges" AlignRight="True" />
+            </Grid>
+
+            <!-- Protection hero (wide) -->
+            <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Protection" Style="{StaticResource Label}" />
+                        <TextBlock x:Name="ProtectionText" Style="{StaticResource Value}" />
+                        <TextBlock x:Name="ProtectionNote" Style="{StaticResource Faint}" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Text="Last scan" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                            <TextBlock x:Name="LastScanText" Style="{StaticResource Value}" HorizontalAlignment="Right" />
+                        </StackPanel>
+                        <Button Style="{StaticResource SoftAccentButton}" Click="QuickScan_Click" AutomationProperties.Name="Quick scan">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE721;" Style="{StaticResource Icon}" FontSize="13" Foreground="{StaticResource AccentBrush}" />
+                                <TextBlock Text="Quick scan" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <UniformGrid Columns="2" Margin="-4,4,-4,0">
+                <c:StatTile x:Name="VersionTile" Label="VEYL Version" Margin="4" ValueBrush="{StaticResource AccentBrush}" />
+                <c:StatTile x:Name="StatusTile" Label="VEYL Status" Margin="4" />
+                <c:StatTile x:Name="SignatureTile" Label="Signatures" Margin="4" />
+                <c:StatTile x:Name="EngineTile" Label="Engine" Margin="4" />
+                <c:StatTile x:Name="VaultTile" Label="Vault" Margin="4" />
+                <c:StatTile x:Name="QuarantineTile" Label="Quarantine" Margin="4" />
+            </UniformGrid>
+
+            <!-- What's new -->
+            <Grid Margin="0,18,0,8">
+                <TextBlock Text="What's New" Style="{StaticResource SectionTitle}" />
+                <Button Style="{StaticResource GhostButton}" Padding="4,2" HorizontalAlignment="Right" Click="AllUpdates_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="All updates" Style="{StaticResource Label}" />
+                        <TextBlock Text="&#xE8A7;" Style="{StaticResource Icon}" FontSize="10" Margin="5,1,0,0"
+                                   Foreground="{StaticResource TextDimBrush}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="LatestVersion" Style="{StaticResource SectionTitle}" />
+                            <Border Style="{StaticResource Badge}" Margin="10,0,0,0">
+                                <TextBlock Text="LATEST" Style="{StaticResource BadgeText}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock x:Name="LatestDate" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <ItemsControl x:Name="LatestNotes" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Style="{StaticResource Dim}" Margin="2,3,0,0" TextWrapping="Wrap">
+                                    <Run Text="·" Foreground="{StaticResource TextFaintBrush}" /> <Run Text="{Binding Mode=OneWay}" />
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Recent activity -->
+            <Grid Margin="0,18,0,8">
+                <TextBlock Text="Recent Activity" Style="{StaticResource SectionTitle}" />
+                <Button Style="{StaticResource GhostButton}" Padding="4,2" HorizontalAlignment="Right" Click="AllActivity_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="View all" Style="{StaticResource Label}" />
+                        <TextBlock Text="&#xE8A7;" Style="{StaticResource Icon}" FontSize="10" Margin="5,1,0,0"
+                                   Foreground="{StaticResource TextDimBrush}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <ItemsControl x:Name="RecentActivity" ItemTemplate="{StaticResource ActivityRow}" />
+            <TextBlock x:Name="NoActivity" Text="Nothing yet. Run a scan or set up your vault to get started."
+                       Style="{StaticResource Faint}" Margin="2,0,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

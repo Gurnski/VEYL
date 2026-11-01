@@ -1,0 +1,47 @@
+<UserControl x:Class="Veyl.App.Views.EntryEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource Card}" Width="480" Padding="24,22" CornerRadius="12">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="6" Opacity="0.5" />
+        </Border.Effect>
+        <StackPanel>
+            <TextBlock x:Name="Heading" Style="{StaticResource H2}" FontSize="18" />
+
+            <TextBlock Text="Name" Style="{StaticResource Label}" Margin="0,18,0,6" />
+            <TextBox x:Name="TitleBox" Tag="e.g. GitHub" />
+
+            <TextBlock Text="Username or email" Style="{StaticResource Label}" Margin="0,12,0,6" />
+            <TextBox x:Name="UserBox" />
+
+            <TextBlock Text="Password" Style="{StaticResource Label}" Margin="0,12,0,6" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <PasswordBox x:Name="PassBox" PasswordChanged="Pass_Changed" />
+                <Button Grid.Column="1" Margin="8,0,0,0" Click="Generate_Click" AutomationProperties.Name="Generate" ToolTip="Generate a strong password">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8B1;" Style="{StaticResource Icon}" FontSize="12" />
+                        <TextBlock Text="Generate" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <TextBlock x:Name="PassHint" Style="{StaticResource Faint}" Margin="0,5,0,0" />
+
+            <TextBlock Text="Website" Style="{StaticResource Label}" Margin="0,12,0,6" />
+            <TextBox x:Name="UrlBox" Tag="https://" />
+
+            <TextBlock Text="Notes" Style="{StaticResource Label}" Margin="0,12,0,6" />
+            <TextBox x:Name="NotesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="70" VerticalContentAlignment="Top" />
+
+            <TextBlock x:Name="Error" Style="{StaticResource BaseText}" Foreground="{StaticResource DangerBrush}" Margin="0,12,0,0" Visibility="Collapsed" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+                <Button Style="{StaticResource PrimaryButton}" Content="Save" Margin="8,0,0,0" Click="Save_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

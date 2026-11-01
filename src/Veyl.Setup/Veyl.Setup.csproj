@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>VEYL-Setup</AssemblyName>
+    <RootNamespace>Veyl.Setup</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- build.ps1 zips dist\VEYL into payload.zip before publishing setup. -->
+    <EmbeddedResource Include="payload.zip" LogicalName="payload.zip" Condition="Exists('payload.zip')" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Veyl.Shared\Veyl.Shared.csproj" />
+  </ItemGroup>
+</Project>

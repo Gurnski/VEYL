@@ -1,0 +1,247 @@
+<UserControl x:Class="Veyl.App.Views.SandboxPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AllowDrop="True" DragEnter="Page_DragEnter" DragLeave="Page_DragLeave" Drop="Page_Drop">
+    <Grid Background="Transparent">
+        <DockPanel Margin="24,20,24,0">
+            <!-- Header -->
+            <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE81E;" Style="{StaticResource Icon}" FontSize="20" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="Sandbox" Style="{StaticResource H1}" Margin="10,0,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <CheckBox x:Name="NetToggle" Style="{StaticResource LabeledToggle}" Content="Allow internet" VerticalAlignment="Center"
+                              Margin="0,0,16,0" ToolTip="Off: the program can't connect anywhere (recommended)" />
+                    <Button Style="{StaticResource PrimaryButton}" Click="Run_Click" AutomationProperties.Name="Run a program">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="12" Foreground="{StaticResource OnAccentBrush}" />
+                            <TextBlock Text="Run a program…" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Previous runs -->
+            <ItemsControl x:Name="RunTabs" DockPanel.Dock="Top" Margin="0,0,0,12">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton Style="{StaticResource TabItemButton}" GroupName="runs" Tag="&#xE7C3;" Click="RunTab_Click"
+                                     Background="{StaticResource CardBrush}">
+                            <TextBlock>
+                                <Run Text="{Binding Name, Mode=OneWay}" /><Run Text="  ·  " Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding Elapsed, Mode=OneWay}" Foreground="{StaticResource TextFaintBrush}" />
+                            </TextBlock>
+                        </RadioButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Grid>
+                <!-- ======================= empty state -->
+                <ScrollViewer x:Name="Intro" VerticalScrollBarVisibility="Auto">
+                    <Border Style="{StaticResource Card}" Padding="28,24" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Text="Try a program without risking your PC" Style="{StaticResource H2}" FontSize="18" />
+                            <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap" TextTrimming="None" Margin="0,6,0,18">
+                                Not sure about something you downloaded? Run it here and watch what it does. When you're done,
+                                throw the whole thing away.
+                            </TextBlock>
+                            <ItemsControl x:Name="Promises">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                            <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding Item1}" Style="{StaticResource Icon}" FontSize="14" HorizontalAlignment="Center"
+                                                           Foreground="{StaticResource AccentBrush}" />
+                                            </Border>
+                                            <StackPanel Margin="14,0,0,0" MaxWidth="620">
+                                                <TextBlock Text="{Binding Item2}" Style="{StaticResource SectionTitle}" />
+                                                <TextBlock Text="{Binding Item3}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border Background="{StaticResource InputBrush}" CornerRadius="8" Padding="14,10" Margin="0,4,0,0">
+                                <TextBlock Style="{StaticResource Faint}" FontSize="12" TextWrapping="Wrap">
+                                    Tip: right-click a program in Explorer and choose "Run in VEYL sandbox", or drop it on this page.
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+
+                <!-- ======================= a run -->
+                <DockPanel x:Name="RunView" Visibility="Collapsed">
+                    <!-- Status -->
+                    <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="46" Height="46" VerticalAlignment="Top">
+                                <Ellipse x:Name="StateRing" Fill="{StaticResource AccentSoftBrush}" />
+                                <TextBlock x:Name="StateIcon" Text="&#xE768;" Style="{StaticResource Icon}" FontSize="17"
+                                           Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" />
+                            </Grid>
+                            <StackPanel Grid.Column="1" Margin="14,0,14,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="RunName" Style="{StaticResource H2}" />
+                                    <Border x:Name="StateBadge" Style="{StaticResource Badge}" Margin="10,2,0,0">
+                                        <TextBlock x:Name="StateText" Style="{StaticResource BadgeText}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock x:Name="RunPath" Style="{StaticResource Faint}" Margin="0,2,0,0" />
+                                <TextBlock x:Name="RunStats" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                <Button x:Name="StopButton" Style="{StaticResource DangerButton}" Content="Stop" Padding="14,7" Click="Stop_Click" />
+                                <Button x:Name="AgainButton" Content="Run again" Padding="14,7" Click="Again_Click" />
+                                <Button Style="{StaticResource IconButton}" Content="&#xE8B7;" ToolTip="Open sandbox folder" AutomationProperties.Name="Open sandbox folder"
+                                        Margin="6,0,0,0" Click="OpenFolder_Click" />
+                                <Button Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Discard this run and everything it wrote"
+                                        AutomationProperties.Name="Discard run" Click="Discard_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Verdict -->
+                    <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,8,0,0" Padding="18,14">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock x:Name="VerdictText" Style="{StaticResource H2}" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" x:Name="VerdictActions">
+                                    <Button Style="{StaticResource SoftAccentButton}" Content="Block this file" Padding="12,6" Click="Block_Click" />
+                                    <Button Style="{StaticResource DangerButton}" Content="Quarantine it" Padding="12,6" Margin="6,0,0,0" Click="Quarantine_Click" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Height="5" Margin="0,10,0,0">
+                                <Border Background="{StaticResource RaisedBrush}" CornerRadius="2.5" />
+                                <Border x:Name="ScoreBar" CornerRadius="2.5" HorizontalAlignment="Left" Width="0" />
+                            </Grid>
+                            <ItemsControl x:Name="FindingList" Margin="0,12,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="74" />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <Border x:Name="sev" Style="{StaticResource Badge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,1,0,0">
+                                                <TextBlock x:Name="sevText" Text="{Binding Label}" Style="{StaticResource BadgeText}" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" />
+                                                <TextBlock Text="{Binding Detail}" Style="{StaticResource Faint}" TextWrapping="Wrap" TextTrimming="None" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Severity}" Value="High">
+                                                <Setter TargetName="sev" Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                <Setter TargetName="sevText" Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Severity}" Value="Medium">
+                                                <Setter TargetName="sev" Property="Background" Value="{StaticResource WarnSoftBrush}" />
+                                                <Setter TargetName="sevText" Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Severity}" Value="Low">
+                                                <Setter TargetName="sev" Property="Background" Value="{StaticResource RaisedBrush}" />
+                                                <Setter TargetName="sevText" Property="Foreground" Value="{StaticResource TextDimBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Severity}" Value="Info">
+                                                <Setter TargetName="sev" Property="Background" Value="{StaticResource RaisedBrush}" />
+                                                <Setter TargetName="sevText" Property="Foreground" Value="{StaticResource InfoBrush}" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Filters -->
+                    <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="3" Margin="0,8,0,8">
+                        <UniformGrid x:Name="Filters" Rows="1" />
+                    </Border>
+
+                    <!-- Timeline -->
+                    <Grid>
+                        <ListBox x:Name="EventList" Style="{StaticResource PlainList}" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Margin" Value="0,0,0,4" />
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter />
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource CardBrush}" CornerRadius="8" Padding="12,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Glyph}" Style="{StaticResource Icon}" FontSize="13" Width="22"
+                                                       Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                            <StackPanel Grid.Column="1" Margin="8,0,12,0">
+                                                <TextBlock Text="{Binding Title}" Style="{StaticResource BaseText}" FontWeight="SemiBold" FontSize="12.5" />
+                                                <TextBlock Text="{Binding Detail}" Style="{StaticResource Faint}" FontFamily="{StaticResource MonoFont}" FontSize="11" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border x:Name="outcome" Style="{StaticResource Badge}" Background="{StaticResource RaisedBrush}">
+                                                    <TextBlock x:Name="outcomeText" Text="{Binding Outcome}" Style="{StaticResource BadgeText}" Foreground="{StaticResource TextDimBrush}" />
+                                                </Border>
+                                                <TextBlock Style="{StaticResource Faint}" Margin="10,0,0,0" Width="58" TextAlignment="Right">
+                                                    <Run Text="+" /><Run Text="{Binding At.TotalSeconds, StringFormat={}{0:0.00}s, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Outcome}" Value="">
+                                            <Setter TargetName="outcome" Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Outcome}" Value="blocked">
+                                            <Setter TargetName="outcome" Property="Background" Value="{StaticResource GoodSoftBrush}" />
+                                            <Setter TargetName="outcomeText" Property="Foreground" Value="{StaticResource GoodBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Outcome}" Value="kept in sandbox">
+                                            <Setter TargetName="outcome" Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                                            <Setter TargetName="outcomeText" Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock x:Name="NoEvents" Text="Waiting for the program to do something…" Style="{StaticResource Faint}"
+                                   Margin="2,4,0,0" VerticalAlignment="Top" />
+                    </Grid>
+                </DockPanel>
+            </Grid>
+        </DockPanel>
+
+        <Border x:Name="DropHint" Margin="16" CornerRadius="14" BorderThickness="2" BorderBrush="{StaticResource AccentBrush}"
+                Background="#E6151219" Visibility="Collapsed" IsHitTestVisible="False">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="&#xE7B8;" Style="{StaticResource Icon}" FontSize="30" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" />
+                <TextBlock Text="Drop to run in the sandbox" Style="{StaticResource H2}" Margin="0,12,0,0" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

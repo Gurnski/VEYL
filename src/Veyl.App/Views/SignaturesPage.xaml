@@ -1,0 +1,91 @@
+<UserControl x:Class="Veyl.App.Views.SignaturesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Veyl.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Text="Signatures" Style="{StaticResource H1}" />
+            <TextBlock Style="{StaticResource Dim}" Margin="0,6,0,16" TextWrapping="Wrap" TextTrimming="None">
+                VEYL flags any file whose MD5, SHA-1 or SHA-256 matches a hash in its blocklist. Add hashes by hand, import lists such as VirusShare's, or point it at feeds.
+            </TextBlock>
+
+            <UniformGrid Columns="2" Margin="-4,0,-4,10">
+                <c:StatTile x:Name="CountTile" Label="Hashes loaded" Margin="4" ValueBrush="{StaticResource AccentBrush}" />
+                <c:StatTile x:Name="UpdatedTile" Label="Feeds last fetched" Margin="4" />
+            </UniformGrid>
+
+            <TextBlock Text="Add a hash" Style="{StaticResource SectionTitle}" Margin="0,8,0,8" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="HashBox" Tag="MD5, SHA-1 or SHA-256 (hex)" FontFamily="{StaticResource MonoFont}" FontSize="12" />
+                        <TextBox x:Name="NameBox" Grid.Column="2" Tag="Detection name (optional)" />
+                        <Button Grid.Column="3" Style="{StaticResource PrimaryButton}" Content="Add" Margin="8,0,0,0" Click="AddHash_Click" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Block a file…" Click="BlockFile_Click" />
+                        <Button x:Name="ImportButton" Content="Import hash lists…" Margin="8,0,0,0" Click="Import_Click" />
+                        <Button Content="Open signature file" Style="{StaticResource GhostButton}" Margin="8,0,0,0" Click="OpenFile_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="AddStatus" Style="{StaticResource Label}" Margin="0,8,0,0" Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Hash packs" Style="{StaticResource SectionTitle}" Margin="0,20,0,8" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Label}" TextWrapping="Wrap" TextTrimming="None">
+                        Imported lists are compiled into packs that load instantly, even with millions of hashes. Importing more
+                        VirusShare files adds them to the VirusShare pack.
+                    </TextBlock>
+                    <ItemsControl x:Name="PackList" Margin="0,6,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Pack.Label}" Style="{StaticResource SectionTitle}" />
+                                        <TextBlock Style="{StaticResource Faint}" Margin="0,2,0,0">
+                                            <Run Text="{Binding Count, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Size, Mode=OneWay}" />
+                                            <Run Text="  ·  " /><Run Text="{Binding When, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource DangerButton}" Content="Remove" Padding="12,6"
+                                            VerticalAlignment="Center" Click="RemovePack_Click" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="NoPacks" Style="{StaticResource Faint}" Margin="0,8,0,0" Text="No packs yet." />
+                </StackPanel>
+            </Border>
+
+            <Grid Margin="0,20,0,8">
+                <TextBlock Text="Feeds" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                <Button x:Name="UpdateButton" Style="{StaticResource SoftAccentButton}" Content="Update now" Padding="12,6"
+                        HorizontalAlignment="Right" Click="Update_Click" />
+            </Grid>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Label}" TextWrapping="Wrap" TextTrimming="None">
+                        One URL or file path per line. Each feed should list MD5, SHA-1 or SHA-256 hashes, one per line, optionally followed by a name.
+                        The launcher refreshes feeds every 12 hours.
+                    </TextBlock>
+                    <TextBox x:Name="FeedsBox" Margin="0,10,0,0" AcceptsReturn="True" MinHeight="90" VerticalContentAlignment="Top"
+                             TextWrapping="NoWrap" FontFamily="{StaticResource MonoFont}" FontSize="12"
+                             Tag="https://example.com/hashes.txt" LostFocus="Feeds_LostFocus" />
+                    <TextBlock x:Name="FeedStatus" Style="{StaticResource Label}" Margin="0,8,0,0" Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

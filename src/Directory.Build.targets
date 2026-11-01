@@ -1,0 +1,7 @@
+<Project>
+  <!-- The WPF SDK removes these implicit usings in its targets, so add them back afterwards. -->
+  <ItemGroup>
+    <Using Include="System.IO" />
+    <Using Include="System.Net.Http" />
+  </ItemGroup>
+</Project>

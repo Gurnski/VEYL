@@ -1,0 +1,24 @@
+<UserControl x:Class="Veyl.App.Views.ActivityPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="24,20,24,0">
+        <TextBlock DockPanel.Dock="Top" Text="Activity" Style="{StaticResource H1}" Margin="0,0,0,16" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="3" Margin="0,0,0,14">
+            <UniformGrid Rows="1">
+                <RadioButton Style="{StaticResource TabItemButton}" Content="All" Tag="&#xE8A9;" GroupName="filter"
+                             IsChecked="True" Checked="Filter_Checked" />
+                <RadioButton Style="{StaticResource TabItemButton}" Content="Threats" Tag="&#xE7BA;" GroupName="filter" Checked="Filter_Checked" />
+                <RadioButton Style="{StaticResource TabItemButton}" Content="Scans" Tag="&#xE721;" GroupName="filter" Checked="Filter_Checked" />
+                <RadioButton Style="{StaticResource TabItemButton}" Content="Vault" Tag="&#xE8D7;" GroupName="filter" Checked="Filter_Checked" />
+            </UniformGrid>
+        </Border>
+
+        <Grid>
+            <ListBox x:Name="List" Style="{StaticResource PlainList}" ItemTemplate="{StaticResource ActivityRow}"
+                     VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" />
+            <TextBlock x:Name="Empty" Text="No activity to show." Style="{StaticResource Faint}" FontSize="13"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0" />
+        </Grid>
+    </DockPanel>
+</UserControl>

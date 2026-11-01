@@ -1,0 +1,34 @@
+<Application x:Class="Veyl.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Veyl.Shared;component/Theme/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- One line of the activity history (ActivityItem). -->
+            <DataTemplate x:Key="ActivityRow">
+                <Border Style="{StaticResource Card}" Margin="0,0,0,6" Padding="12,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource RaisedBrush}">
+                            <TextBlock Text="{Binding Glyph}" Style="{StaticResource Icon}" FontSize="13" HorizontalAlignment="Center"
+                                       Foreground="{StaticResource TextDimBrush}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{Binding Detail}" Style="{StaticResource Faint}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding When}" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

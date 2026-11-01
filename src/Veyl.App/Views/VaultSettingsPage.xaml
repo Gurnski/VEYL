@@ -1,0 +1,84 @@
+<UserControl x:Class="Veyl.App.Views.VaultSettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Veyl.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Text="Vault Settings" Style="{StaticResource H1}" Margin="0,0,0,16" />
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="Lock after inactivity" Style="{StaticResource SectionTitle}" />
+                        <TextBlock x:Name="LockText" Style="{StaticResource SectionTitle}" HorizontalAlignment="Right" Foreground="{StaticResource AccentBrush}" />
+                    </Grid>
+                    <TextBlock Text="The vault also locks when you lock Windows or the PC goes to sleep." Style="{StaticResource Label}" Margin="0,3,0,0" />
+                    <Slider x:Name="LockSlider" Minimum="0" Maximum="60" Margin="0,10,0,0" IsSnapToTickEnabled="True" TickFrequency="1"
+                            ValueChanged="Slider_Changed" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="Clear copied passwords after" Style="{StaticResource SectionTitle}" />
+                        <TextBlock x:Name="ClipText" Style="{StaticResource SectionTitle}" HorizontalAlignment="Right" Foreground="{StaticResource AccentBrush}" />
+                    </Grid>
+                    <TextBlock Text="Copied passwords are always kept out of clipboard history (Win+V) and cloud sync." Style="{StaticResource Label}" Margin="0,3,0,0" />
+                    <Slider x:Name="ClipSlider" Minimum="0" Maximum="120" Margin="0,10,0,0" IsSnapToTickEnabled="True" TickFrequency="5"
+                            ValueChanged="Slider_Changed" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Recovery key" Style="{StaticResource SectionTitle}" Margin="0,16,0,8" />
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock x:Name="RecoveryStatus" Style="{StaticResource BaseText}" FontWeight="SemiBold" />
+                        <TextBlock x:Name="RecoveryHint" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <Button x:Name="RecoveryButton" Style="{StaticResource SoftAccentButton}" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Click="Recovery_Click" />
+                </Grid>
+            </Border>
+
+            <TextBlock Text="Change master password" Style="{StaticResource SectionTitle}" Margin="0,16,0,8" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock x:Name="ChangeHint" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                    <UniformGrid Columns="3" Margin="-4,0">
+                        <StackPanel Margin="4,0">
+                            <TextBlock Text="Current" Style="{StaticResource Label}" Margin="0,0,0,6" />
+                            <PasswordBox x:Name="CurrentBox" />
+                        </StackPanel>
+                        <StackPanel Margin="4,0">
+                            <TextBlock Text="New" Style="{StaticResource Label}" Margin="0,0,0,6" />
+                            <PasswordBox x:Name="NewBox" />
+                        </StackPanel>
+                        <StackPanel Margin="4,0">
+                            <TextBlock Text="Confirm new" Style="{StaticResource Label}" Margin="0,0,0,6" />
+                            <PasswordBox x:Name="ConfirmBox" />
+                        </StackPanel>
+                    </UniformGrid>
+                    <Grid Margin="0,12,0,0">
+                        <TextBlock x:Name="ChangeStatus" Style="{StaticResource BaseText}" VerticalAlignment="Center" />
+                        <Button x:Name="ChangeButton" Style="{StaticResource PrimaryButton}" Content="Change password"
+                                HorizontalAlignment="Right" Click="Change_Click" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Storage" Style="{StaticResource SectionTitle}" Margin="0,16,0,8" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Vault file" Style="{StaticResource Label}" />
+                    <TextBlock x:Name="PathText" Style="{StaticResource BaseText}" FontFamily="{StaticResource MonoFont}" FontSize="12" Margin="0,4,0,0" />
+                    <TextBlock Style="{StaticResource Faint}" Margin="0,8,0,0" TextWrapping="Wrap" TextTrimming="None">
+                        AES-256-GCM, key from PBKDF2-HMAC-SHA256 with 600,000 rounds. Each save writes a new file and keeps the
+                        previous one as vault.veyl.bak. To back up, copy both files somewhere safe. They are useless without your master password.
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,61 @@
+<UserControl x:Class="Veyl.App.Views.ProtectionPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Veyl.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Text="Real-time protection" Style="{StaticResource H1}" Margin="0,0,0,16" />
+
+            <UniformGrid Columns="3" Margin="-4,0,-4,10">
+                <c:StatTile x:Name="StateTile" Label="Status" Margin="4" />
+                <c:StatTile x:Name="CheckedTile" Label="Files checked" Note="This session" Margin="4" />
+                <c:StatTile x:Name="BlockedTile" Label="Threats blocked" Note="This session" Margin="4" />
+            </UniformGrid>
+
+            <c:SettingRow Title="Real-time protection"
+                          Description="Scans programs and scripts as soon as they land in a watched folder.">
+                <CheckBox x:Name="RealtimeToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+            <c:SettingRow Title="Quarantine threats automatically"
+                          Description="Known-bad files are moved to quarantine straight away. Suspicious files only raise a warning.">
+                <CheckBox x:Name="AutoQuarantineToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+            <c:SettingRow Title="Ask Windows Defender too"
+                          Description="Sends file contents to Defender's engine through AMSI as a second opinion. No effect if Defender is turned off.">
+                <CheckBox x:Name="AmsiToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+
+            <Grid Margin="0,16,0,8">
+                <TextBlock Text="Watched folders" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource GhostButton}" Content="Reset to defaults" Click="Reset_Click" />
+                    <Button Style="{StaticResource SoftAccentButton}" Content="Add folder" Padding="12,6" Margin="6,0,0,0" Click="Add_Click" />
+                </StackPanel>
+            </Grid>
+            <ItemsControl x:Name="Folders">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,6" Padding="14,8">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE8B7;" Style="{StaticResource Icon}" FontSize="14" Foreground="{StaticResource TextDimBrush}" />
+                                    <TextBlock Text="{Binding}" Style="{StaticResource BaseText}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Button Style="{StaticResource IconButton}" Content="&#xE711;" HorizontalAlignment="Right"
+                                        ToolTip="Stop watching" Click="Remove_Click" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Style="{StaticResource Card}" Background="Transparent" BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1" Margin="0,14,0,0">
+                <TextBlock Style="{StaticResource Faint}" TextWrapping="Wrap" TextTrimming="None" FontSize="12">
+                    VEYL watches folders from user mode, so it reacts just after a file is written rather than blocking it beforehand
+                    the way a kernel driver can. Windows Defender should stay on alongside it.
+                </TextBlock>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

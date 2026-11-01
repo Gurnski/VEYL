@@ -1,0 +1,28 @@
+<UserControl x:Class="Veyl.App.Views.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Veyl.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Text="General" Style="{StaticResource H1}" Margin="0,0,0,16" />
+
+            <c:SettingRow x:Name="StartupRow" Title="Start with Windows"
+                          Description="Runs the launcher's checks when you sign in, then keeps VEYL in the system tray.">
+                <CheckBox x:Name="StartupToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+            <c:SettingRow Title="Start minimized to tray" Description="When started at sign-in, don't open the window.">
+                <CheckBox x:Name="MinimizedToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+            <c:SettingRow Title="Close to tray" Description="The close button hides VEYL instead of quitting, so protection keeps running.">
+                <CheckBox x:Name="TrayToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+            <c:SettingRow Title="Notifications" Description="Show a Windows notification when a threat is found or blocked.">
+                <CheckBox x:Name="NotifyToggle" Style="{StaticResource Toggle}" Click="Toggle_Click" />
+            </c:SettingRow>
+
+            <TextBlock x:Name="TaskNote" Style="{StaticResource Faint}" Margin="2,4,0,0" TextWrapping="Wrap" TextTrimming="None" />
+
+            <Button Style="{StaticResource DangerButton}" Content="Quit VEYL" HorizontalAlignment="Left" Margin="0,20,0,0" Click="Quit_Click" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

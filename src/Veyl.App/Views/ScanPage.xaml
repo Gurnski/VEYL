@@ -1,0 +1,172 @@
+<UserControl x:Class="Veyl.App.Views.ScanPage" AllowDrop="True" DragEnter="Page_DragEnter" DragLeave="Page_DragLeave" Drop="Page_Drop"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="Transparent">
+    <DockPanel Margin="24,20,24,0">
+        <StackPanel DockPanel.Dock="Top">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <TextBlock Text="&#xEA18;" Style="{StaticResource Icon}" FontSize="20" Foreground="{StaticResource AccentBrush}" />
+                <TextBlock Text="Scan" Style="{StaticResource H1}" Margin="10,0,0,0" />
+            </StackPanel>
+
+            <Border x:Name="ModeStrip" Style="{StaticResource Card}" Padding="3">
+                <UniformGrid Rows="1">
+                    <RadioButton x:Name="QuickMode" Style="{StaticResource TabItemButton}" Content="Quick scan" Tag="&#xE945;"
+                                 GroupName="mode" IsChecked="True" Checked="Mode_Checked" />
+                    <RadioButton x:Name="FullMode" Style="{StaticResource TabItemButton}" Content="Full scan" Tag="&#xEDA2;"
+                                 GroupName="mode" Checked="Mode_Checked" />
+                    <RadioButton x:Name="CustomMode" Style="{StaticResource TabItemButton}" Content="Custom scan" Tag="&#xE8B7;"
+                                 GroupName="mode" Checked="Mode_Checked" />
+                </UniformGrid>
+            </Border>
+
+            <!-- Hero -->
+            <Border x:Name="HeroCard" Style="{StaticResource Card}" Margin="0,14,0,0" Padding="20,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="58" Height="58" VerticalAlignment="Top">
+                        <Ellipse Fill="{StaticResource AccentSoftBrush}" />
+                        <TextBlock x:Name="HeroIcon" Text="&#xE721;" Style="{StaticResource Icon}" FontSize="22"
+                                   Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform x:Name="HeroSpin" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Grid>
+
+                    <StackPanel Grid.Column="1" Margin="18,2,18,0">
+                        <TextBlock x:Name="HeroTitle" Style="{StaticResource H2}" />
+                        <TextBlock x:Name="HeroDetail" Style="{StaticResource Dim}" TextWrapping="Wrap" TextTrimming="None" Margin="0,4,0,0" />
+                        <CheckBox x:Name="DeepToggle" Style="{StaticResource LabeledToggle}" Margin="0,12,0,0"
+                                  Content="Deep scan: also recheck files that haven't changed since their last clean scan" />
+
+                        <StackPanel x:Name="RunningPanel" Visibility="Collapsed" Margin="0,12,0,0">
+                            <TextBlock x:Name="CurrentFile" Style="{StaticResource Faint}" FontFamily="{StaticResource MonoFont}" />
+                            <Grid x:Name="ScanTrack" Height="4" Margin="0,10,0,0" ClipToBounds="True">
+                                <Border Background="{StaticResource RaisedBrush}" CornerRadius="2" />
+                                <Border Width="140" CornerRadius="2" HorizontalAlignment="Left">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#00EBA640" Offset="0" />
+                                            <GradientStop Color="#FFEBA640" Offset="0.5" />
+                                            <GradientStop Color="#00EBA640" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.RenderTransform>
+                                        <TranslateTransform x:Name="ScanSweep" />
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+
+                        <UniformGrid x:Name="Stats" Rows="1" Margin="0,14,0,0" HorizontalAlignment="Left">
+                            <StackPanel Margin="0,0,32,0">
+                                <TextBlock Text="Files" Style="{StaticResource Label}" />
+                                <TextBlock x:Name="FilesText" Text="0" Style="{StaticResource Value}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,32,0">
+                                <TextBlock Text="Threats" Style="{StaticResource Label}" />
+                                <TextBlock x:Name="ThreatsText" Text="0" Style="{StaticResource Value}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Elapsed" Style="{StaticResource Label}" />
+                                <TextBlock x:Name="ElapsedText" Text="00:00" Style="{StaticResource Value}" />
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                        <Button x:Name="StartButton" Style="{StaticResource PrimaryButton}" Click="Start_Click" AutomationProperties.Name="Start scan" Padding="20,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="12" Foreground="{StaticResource OnAccentBrush}" />
+                                <TextBlock Text="Start scan" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="StopButton" Style="{StaticResource DangerButton}" Click="Stop_Click" AutomationProperties.Name="Stop" Padding="20,10" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE71A;" Style="{StaticResource Icon}" FontSize="12" Foreground="{StaticResource DangerBrush}" />
+                                <TextBlock Text="Stop" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Margin="0,20,0,8">
+                <TextBlock Text="Detections" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                <Button x:Name="QuarantineAllButton" Style="{StaticResource SoftAccentButton}" Padding="12,6" HorizontalAlignment="Right"
+                        Content="Quarantine all" Click="QuarantineAll_Click" Visibility="Collapsed" />
+            </Grid>
+        </StackPanel>
+
+        <Grid>
+            <ListBox x:Name="DetectionList" Style="{StaticResource PlainList}" VirtualizingPanel.ScrollUnit="Pixel">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="sev" Width="36" Height="36" CornerRadius="8" Background="{StaticResource WarnSoftBrush}" VerticalAlignment="Top">
+                                    <TextBlock x:Name="sevIcon" Text="&#xE7BA;" Style="{StaticResource Icon}" HorizontalAlignment="Center"
+                                               Foreground="{StaticResource WarnBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="12,0,12,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding FileName}" Style="{StaticResource SectionTitle}" />
+                                        <Border x:Name="badge" Style="{StaticResource Badge}" Margin="10,0,0,0" Background="{StaticResource WarnSoftBrush}">
+                                            <TextBlock x:Name="badgeText" Text="{Binding Severity}" Style="{StaticResource BadgeText}" Foreground="{StaticResource WarnBrush}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Folder}" Style="{StaticResource Faint}" Margin="0,2,0,0" />
+                                    <TextBlock Style="{StaticResource Dim}" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" TextTrimming="None">
+                                        <Run Text="{Binding Result.Threat, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                        <Run Text="  " /><Run Text="{Binding Result.Detail, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding State}" Style="{StaticResource Label}" Foreground="{StaticResource GoodBrush}" Margin="0,6,0,0" />
+                                </StackPanel>
+                                <StackPanel x:Name="actions" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE8B7;" ToolTip="Show in folder" AutomationProperties.Name="Show in folder" Click="Reveal_Click" />
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE711;" ToolTip="Dismiss" AutomationProperties.Name="Dismiss" Click="Dismiss_Click" Margin="2,0,0,0" />
+                                    <Button Style="{StaticResource SoftAccentButton}" Content="Quarantine" Padding="12,6" Margin="6,0,0,0" Click="Quarantine_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsMalicious}" Value="True">
+                                <Setter TargetName="sev" Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                <Setter TargetName="sevIcon" Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                <Setter TargetName="sevIcon" Property="Text" Value="&#xEA39;" />
+                                <Setter TargetName="badge" Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                <Setter TargetName="badgeText" Property="Foreground" Value="{StaticResource DangerBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsResolved}" Value="True">
+                                <Setter TargetName="actions" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="NoDetections" Text="No detections. Results from your scan show up here."
+                       Style="{StaticResource Faint}" Margin="2,0,0,0" VerticalAlignment="Top" />
+        </Grid>
+    </DockPanel>
+
+    <!-- Shown while a file or folder is dragged over the page. -->
+    <Border x:Name="DropHint" Margin="16" CornerRadius="14" BorderThickness="2" BorderBrush="{StaticResource AccentBrush}"
+            Background="#E6151219" Visibility="Collapsed" IsHitTestVisible="False">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="&#xE896;" Style="{StaticResource Icon}" FontSize="30" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" />
+            <TextBlock Text="Drop to scan" Style="{StaticResource H2}" Margin="0,12,0,0" HorizontalAlignment="Center" />
+            <TextBlock Text="Files and folders are checked straight away" Style="{StaticResource Faint}" Margin="0,4,0,0" HorizontalAlignment="Center" />
+        </StackPanel>
+    </Border>
+    </Grid>
+</UserControl>

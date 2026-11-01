@@ -1,0 +1,9 @@
+native/build/
+out/
+dist/
+bin/
+obj/
+.vs/
+*.user
+/src/Veyl.Setup/payload.zip
+Inspo/

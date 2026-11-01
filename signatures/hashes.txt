@@ -1,0 +1,9 @@
+# VEYL hash signatures
+# One MD5, SHA-1 or SHA-256 per line, optionally followed by a detection name:
+#   <hash> <name>
+# Big lists (VirusShare) belong in a signature pack: use "Import hash lists" in VEYL.
+# Lines starting with # are ignored. Feed updates are merged into the copy in
+# C:\ProgramData\VEYL\signatures\hashes.txt; this file is only the seed.
+
+# EICAR standard anti-virus test file (safe, used to check detection works)
+275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f EICAR-Test-File

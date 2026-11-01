@@ -1,0 +1,7 @@
+* text=auto
+*.veyl binary
+*.vdb binary
+*.ico binary
+*.png binary
+*.exe binary
+*.dll binary

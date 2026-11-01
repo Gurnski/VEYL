@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon></ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Built by native/CMakeLists.txt; build.ps1 runs CMake first. -->
+    <None Include="..\..\native\build\Release\Veyl.Core.dll" Link="Veyl.Core.dll"
+          CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\native\build\Release\Veyl.Core.dll')" />
+    <None Include="..\..\native\build\Release\Veyl.SandboxHook.dll" Link="Veyl.SandboxHook.dll"
+          CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\native\build\Release\Veyl.SandboxHook.dll')" />
+    <None Include="..\..\signatures\hashes.txt" Link="signatures\hashes.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

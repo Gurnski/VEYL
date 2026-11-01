@@ -1,0 +1,60 @@
+<Window x:Class="Veyl.Setup.SetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vc="clr-namespace:Veyl.Shared.Controls;assembly=Veyl.Shared"
+        Title="VEYL Setup" Width="720" Height="420" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" WindowStyle="None"
+        Background="{StaticResource WindowBrush}" UseLayoutRounding="True">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="44" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="0" />
+    </WindowChrome.WindowChrome>
+
+    <!-- Same frame as the launcher: one sets VEYL up, the other keeps it running. -->
+    <Grid>
+        <vc:HeroBackdrop x:Name="Hero" BrandLift="88" Tagline="SETUP" />
+
+        <Grid VerticalAlignment="Top" Height="44" Margin="18,6,10,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Path Data="{StaticResource LogoGeometry}" Stroke="{StaticResource TextBrush}" StrokeThickness="2"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="20" Height="20" Stretch="Uniform" />
+                <TextBlock Text="Setup" Style="{StaticResource Faint}" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Style="{StaticResource WindowButton}" Content="&#xE921;" Click="Minimize_Click" ToolTip="Minimize" />
+                <Button x:Name="CloseX" Style="{StaticResource CloseButton}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close" />
+            </StackPanel>
+        </Grid>
+
+        <Grid VerticalAlignment="Bottom">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#00120F17" Offset="0" />
+                    <GradientStop Color="#E6120F17" Offset="0.35" />
+                </LinearGradientBrush>
+            </Grid.Background>
+            <StackPanel Margin="28,40,28,24">
+                <Grid>
+                    <TextBlock x:Name="StatusTitle" Style="{StaticResource H2}" FontSize="17" />
+                    <TextBlock x:Name="StatusRight" Style="{StaticResource Faint}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                </Grid>
+                <TextBlock x:Name="StatusDetail" Style="{StaticResource Dim}" FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap" />
+
+                <WrapPanel x:Name="Options" Margin="0,14,0,0">
+                    <CheckBox x:Name="StartupOpt" Style="{StaticResource LabeledToggle}" Content="Start with Windows" IsChecked="True" Margin="0,0,22,0" />
+                    <CheckBox x:Name="MenuOpt" Style="{StaticResource LabeledToggle}" Content="Explorer right-click menu (scan, sandbox)" IsChecked="True" Margin="0,0,22,0" />
+                    <CheckBox x:Name="DesktopOpt" Style="{StaticResource LabeledToggle}" Content="Desktop shortcut" />
+                </WrapPanel>
+                <CheckBox x:Name="RemoveDataOpt" Style="{StaticResource LabeledToggle}" Margin="0,14,0,0" Visibility="Collapsed"
+                          Content="Also delete every user's vault, quarantine and settings (can't be undone)" />
+
+                <vc:ProgressStrip x:Name="Progress" Margin="0,14,0,0" Visibility="Collapsed" />
+
+                <Grid Margin="0,16,0,0">
+                    <StackPanel x:Name="Buttons" Orientation="Horizontal" />
+                    <Button x:Name="LinkButton" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" Padding="6,4"
+                            Visibility="Collapsed" Click="Link_Click" />
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- Always self-contained so dev builds and the installer ship identical layouts. -->
+    <SelfContained>true</SelfContained>
+    <Version>0.2.0</Version>
+    <Company>VEYL</Company>
+    <Product>VEYL</Product>
+    <Copyright>Personal use</Copyright>
+    <!-- Launcher and App share one output folder, the same layout as an install. -->
+    <OutputPath>$(MSBuildThisFileDirectory)..\out\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <ApplicationIcon>$(MSBuildThisFileDirectory)..\assets\veyl.ico</ApplicationIcon>
+  </PropertyGroup>
+</Project>
