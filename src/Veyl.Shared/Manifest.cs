@@ -25,6 +25,14 @@ public sealed class Manifest
     public string BuildDate { get; set; } = "";
     public string UpdateUrl { get; set; } = "";
     public string DownloadUrl { get; set; } = "";
+
+    /// <summary>
+    /// SHA-256 and size of VEYL-Setup.exe at <see cref="DownloadUrl"/>. Only the release copy of the
+    /// manifest (written by release.ps1) has these: the copy inside the installer can't hold its own hash.
+    /// </summary>
+    public string SetupSha256 { get; set; } = "";
+    public long SetupSize { get; set; }
+
     public Dictionary<string, string> Files { get; set; } = [];
     public List<string> SignatureFeeds { get; set; } = [];
     public List<ChangelogEntry> Changelog { get; set; } = [];

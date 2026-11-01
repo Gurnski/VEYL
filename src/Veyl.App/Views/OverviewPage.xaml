@@ -10,11 +10,21 @@
             <Border x:Name="UpdateBanner" Style="{StaticResource Card}" Background="{StaticResource AccentSoftBrush}"
                     Margin="0,0,0,8" Visibility="Collapsed">
                 <Grid>
-                    <StackPanel Orientation="Horizontal">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="&#xE896;" Style="{StaticResource Icon}" Foreground="{StaticResource AccentBrush}" />
-                        <TextBlock x:Name="UpdateText" Style="{StaticResource BaseText}" FontWeight="SemiBold" Margin="10,0,0,0"
-                                   Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                        <StackPanel Margin="10,0,0,0">
+                            <TextBlock x:Name="UpdateText" Style="{StaticResource BaseText}" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap" />
+                            <TextBlock x:Name="UpdateNote" Style="{StaticResource BaseText}" Foreground="{StaticResource TextDimBrush}"
+                                       TextWrapping="Wrap" Margin="0,2,0,0" Visibility="Collapsed" />
+                        </StackPanel>
                     </StackPanel>
+                    <Button x:Name="UpdateButton" Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="Download and install"
+                            Margin="12,0,0,0" VerticalAlignment="Center" Click="Update_Click" />
                 </Grid>
             </Border>
 

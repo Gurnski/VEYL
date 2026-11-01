@@ -1,4 +1,4 @@
-Required Notice: Copyright (c) 2026 Raymond (https://github.com/Gurnski/VEYL)
+Required Notice: Copyright (c) 2026 Daniel Rea (https://github.com/Gurnski/VEYL)
 
 # PolyForm Noncommercial License 1.0.0
 

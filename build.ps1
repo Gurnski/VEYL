@@ -7,11 +7,11 @@
 .EXAMPLE
     .\build.ps1                 # release build
     .\build.ps1 -Sign           # also sign with a local self-signed certificate
-    .\build.ps1 -UpdateUrl https://example.com/veyl/manifest.json
+    .\build.ps1 -UpdateUrl ""   # no update checks (the default checks GitHub Releases)
 #>
 param(
     [switch]$Sign,
-    [string]$UpdateUrl = "",
+    [string]$UpdateUrl = "https://github.com/Gurnski/VEYL/releases/latest/download/manifest.json",
     [string]$Channel = "stable"
 )
 
@@ -83,7 +83,7 @@ $manifest = [ordered]@{
     channel        = $Channel
     buildDate      = (Get-Date -Format "yyyy-MM-dd")
     updateUrl      = $UpdateUrl
-    downloadUrl    = ""
+    downloadUrl    = if ($UpdateUrl) { $UpdateUrl -replace "[^/]+$", "VEYL-Setup.exe" } else { "" }
     files          = $files
     signatureFeeds = @()
 }

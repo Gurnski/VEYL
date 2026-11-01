@@ -18,7 +18,7 @@ public static partial class SignatureUpdater
     public static string PackLabelFor(IEnumerable<string> files) =>
         files.All(f => Path.GetFileName(f).StartsWith("VirusShare", StringComparison.OrdinalIgnoreCase)) ? "VirusShare" : "Imported";
 
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
+    private static readonly HttpClient Http = Web.Client(TimeSpan.FromSeconds(20));
 
     public static Dictionary<string, string> Parse(IEnumerable<string> lines, string defaultName)
     {

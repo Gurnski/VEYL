@@ -13,7 +13,7 @@ public sealed record LaunchResult(bool Ok, string Title, string Detail, string? 
 public sealed class LaunchSequence
 {
     public const string AppExe = "Veyl.App.exe";
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5) };
+    private static readonly HttpClient Http = Web.Client(TimeSpan.FromSeconds(5));
 
     public async Task<LaunchResult> RunAsync(Action<LaunchStep> report)
     {

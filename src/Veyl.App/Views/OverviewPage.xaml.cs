@@ -43,7 +43,7 @@ public partial class OverviewPage : UserControl, IRefreshable
             StatusTile.Value = $"Update available ({update})";
             StatusTile.ValueBrush = B("AccentBrush");
             UpdateBanner.Visibility = Visibility.Visible;
-            UpdateText.Text = $"VEYL {update} is available. Install it by running the new release's install.ps1.";
+            if (!_updating) UpdateText.Text = $"VEYL {update} is available.";
         }
         else
         {
@@ -89,6 +89,44 @@ public partial class OverviewPage : UserControl, IRefreshable
     {
         MainWindow.Current?.Navigate("shield", "scan");
         _ = AppServices.Scan.RunAsync(ScanKind.Quick);
+    }
+
+    private bool _updating;
+    private string? _downloaded;
+
+    private async void Update_Click(object sender, RoutedEventArgs e)
+    {
+        if (_downloaded is not null && File.Exists(_downloaded))
+        {
+            Updater.StartSetup(_downloaded);  // e.g. the UAC prompt was cancelled the first time
+            return;
+        }
+        if (_updating) return;
+        _updating = true;
+        UpdateButton.IsEnabled = false;
+        UpdateNote.Visibility = Visibility.Visible;
+        UpdateNote.Text = "Checking the release…";
+        try
+        {
+            var remote = await Updater.FetchRemoteAsync(AppServices.Manifest?.UpdateUrl);
+            UpdateText.Text = $"Downloading VEYL {remote.Version}";
+            var progress = new Progress<double>(p => UpdateNote.Text = $"{p:P0}");
+            string setup = await Updater.DownloadAsync(remote, AppServices.Version, progress);
+            UpdateNote.Text = "Download checked. Starting the installer, which will close VEYL.";
+            AppServices.Activity.Add(LogKind.System, $"Update {remote.Version} downloaded", "SHA-256 matched the release manifest");
+            Updater.StartSetup(setup);
+            _downloaded = setup;
+            UpdateButton.Content = "Open installer";
+            UpdateButton.IsEnabled = true;
+        }
+        catch (UpdateFailed ex)
+        {
+            UpdateText.Text = "Update didn't download";
+            UpdateNote.Text = ex.Message;
+            UpdateButton.Content = "Try again";
+            UpdateButton.IsEnabled = true;
+            _updating = false;
+        }
     }
 
     private void AllUpdates_Click(object sender, RoutedEventArgs e) => MainWindow.Current?.Navigate("home", "updates");
