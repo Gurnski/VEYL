@@ -146,6 +146,27 @@ public sealed class Installer
                 finally { p.Dispose(); }
             }
         }
+
+        // Explorer runs the Windows 11 menu handler in a COM surrogate (dllhost.exe), which keeps
+        // Veyl.ShellMenu.dll open and would stop the install folder being replaced. Windows starts
+        // a new surrogate the next time the menu opens, so closing it is harmless.
+        foreach (var p in Process.GetProcessesByName("dllhost"))
+        {
+            try
+            {
+                bool ours = p.Modules.Cast<ProcessModule>().Any(m =>
+                    m.ModuleName.Equals("Veyl.ShellMenu.dll", StringComparison.OrdinalIgnoreCase));
+                if (!ours) continue;
+                Log($"Stopping the menu handler's dllhost (pid {p.Id}, session {p.SessionId})");
+                p.Kill();
+                p.WaitForExit(5000);
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                // Another user's surrogate we can't inspect, or it has already gone.
+            }
+            finally { p.Dispose(); }
+        }
     }
 
     private double _copyFraction;
@@ -323,7 +344,57 @@ public sealed class Installer
                 cmd.SetValue("", $"\"{app}\" --sandbox \"%1\"");
             }
             Log("Added 'Scan with VEYL' and 'Run in VEYL sandbox' to Explorer's menu");
+            if (ModernMenu.Supported && AddModernMenu()) HideClassicMenu();
         }
+        else
+        {
+            RemoveModernMenu();
+        }
+    }
+
+    /// <summary>Windows 11's main menu: trust VEYL's certificate for packages, register the menu package.</summary>
+    private bool AddModernMenu()
+    {
+        try
+        {
+            Log($"Trusted VEYL's certificate for app packages (TrustedPeople) {ModernMenu.TrustCertificate(TargetDir)}");
+        }
+        catch (Exception ex) when (ex is IOException or System.Security.Cryptography.CryptographicException)
+        {
+            Log($"Couldn't trust the package certificate, so the Windows 11 menu is skipped: {ex.Message}");
+            return false;
+        }
+        // Not fatal: the classic entries stay visible under "Show more options".
+        string? error = ModernMenu.Register(TargetDir, Payload.Manifest.Version);
+        Log(error is null
+            ? "Added VEYL to Windows 11's main right-click menu (Explorer shows it after it next restarts, or at next sign-in)"
+            : $"Windows 11 menu package not registered: {error}");
+        return error is null;
+    }
+
+    /// <summary>
+    /// Windows 11 also lists packaged menu entries under "Show more options", so with the package
+    /// registered the classic entries would appear twice there. ProgrammaticAccessOnly hides them
+    /// from the menu but keeps the keys, which the app reads as "the menu option is on".
+    /// </summary>
+    private void HideClassicMenu()
+    {
+        foreach (var (classes, verb) in new[] { (MenuClasses, MenuVerb), (SandboxClasses, SandboxVerb) })
+            foreach (string cls in classes)
+            {
+                using var key = Registry.LocalMachine.OpenSubKey($@"SOFTWARE\Classes\{cls}\{verb}", writable: true);
+                key?.SetValue("ProgrammaticAccessOnly", "");
+            }
+        Log("Hid the classic menu entries, since the package's entries show under \"Show more options\" too");
+    }
+
+    private void RemoveModernMenu()
+    {
+        if (!ModernMenu.Supported) return;
+        string? error = ModernMenu.RemoveForAllUsers();
+        Log(error is null ? "Removed the Windows 11 menu package" : $"Couldn't remove the Windows 11 menu package: {error}");
+        try { Log($"Removed {ModernMenu.UntrustCertificate()} VEYL certificate(s) from TrustedPeople"); }
+        catch (System.Security.Cryptography.CryptographicException ex) { Log($"Couldn't remove the certificate: {ex.Message}"); }
     }
 
     private void CreateShortcut(string link, string target)
@@ -427,6 +498,7 @@ public sealed class Installer
         {
             foreach (string l in new[] { StartMenuLink, DesktopLink }) if (File.Exists(l)) File.Delete(l);
             RemoveMenu();
+            RemoveModernMenu();  // before the files go: the package points at the install folder
             Registry.LocalMachine.DeleteSubKeyTree(UninstallKey, throwOnMissingSubKey: false);
         });
 

@@ -10,6 +10,9 @@
           CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\native\build\Release\Veyl.Core.dll')" />
     <None Include="..\..\native\build\Release\Veyl.SandboxHook.dll" Link="Veyl.SandboxHook.dll"
           CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\native\build\Release\Veyl.SandboxHook.dll')" />
+    <!-- 32-bit sandbox monitor: built into native\build32, which build.ps1 configures with -A Win32. -->
+    <None Include="..\..\native\build32\Release\Veyl.SandboxHook32.dll" Link="Veyl.SandboxHook32.dll"
+          CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\native\build32\Release\Veyl.SandboxHook32.dll')" />
     <None Include="..\..\signatures\hashes.txt" Link="signatures\hashes.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

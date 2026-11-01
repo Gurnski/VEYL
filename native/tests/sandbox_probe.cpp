@@ -71,6 +71,19 @@ int wmain(int argc, wchar_t** argv) {
     }
     if (code != 7) fails |= 0x10;
 
+    // 5b. A 32-bit child, which needs the other monitor (64-bit probe to 32-bit cmd.exe).
+    wchar_t cmd32[MAX_PATH + 32];
+    GetWindowsDirectoryW(cmd32, MAX_PATH);
+    wcscat_s(cmd32, L"\\SysWOW64\\cmd.exe /c exit 8");
+    code = 0;
+    if (CreateProcessW(nullptr, cmd32, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+        WaitForSingleObject(pi.hProcess, 10000);
+        GetExitCodeProcess(pi.hProcess, &code);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+    }
+    if (code != 8) fails |= 0x80;
+
     // 6. Network: should be blocked.
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);

@@ -225,7 +225,7 @@ public sealed class SandboxService : Observable
                 "The scanner already flags this file", $"{scan.Threat}: {scan.Detail}"));
         if (!proc.Monitored)
             run.Findings.Add(new(Severity.Info, "Activity isn't recorded for this program",
-                "It's a 32-bit program. It still runs isolated, but VEYL can only watch 64-bit programs for now."));
+                "It still runs isolated. VEYL watches 64-bit and 32-bit Windows programs, but not 32-bit .NET programs or ones built for ARM."));
 
         // Only firewall the file itself, never a shared host like cmd.exe or powershell.exe.
         string? rule = allowNetwork || target.Exe != file ? null : AddFirewallBlock(id, target.Exe);

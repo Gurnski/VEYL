@@ -1,4 +1,5 @@
 native/build/
+native/build32/
 out/
 dist/
 bin/

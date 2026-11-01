@@ -17,6 +17,10 @@ native/            Veyl.Core.dll (C++20, MSVC) and its tests
   src/clipboard.cpp     copy secrets without Win+V history, auto-clear
   src/sandbox.cpp       starts programs isolated (restricted token + job object)
   sandbox/hook.cpp      Veyl.SandboxHook.dll: redirects writes, records activity
+                        (built twice: Veyl.SandboxHook32.dll is the 32-bit copy)
+  sandbox/inject32.hpp  loads the 32-bit monitor through a program's import table
+  shellmenu/menu.cpp    Veyl.ShellMenu.dll: Windows 11 main right-click menu
+packaging/menu/         sparse package manifest for the Windows 11 menu (Veyl.Menu.msix)
   tests/                core tests, sandbox tests, the "malware-like" probe, v1 vault fixture
 src/Veyl.Shared/   P/Invoke wrappers, paths, settings, manifest, theme
 src/Veyl.Launcher/ VEYL.exe: splash, integrity/update checks, starts the app
@@ -33,8 +37,10 @@ Needs Visual Studio 2022 with the C++ workload and the .NET 8 SDK.
 
 ```powershell
 .\build.ps1          # native build + tests, then dist\VEYL-Setup.exe
-.\build.ps1 -Sign    # also sign with a self-signed cert (created on first run)
+.\build.ps1 -Sign    # also sign the programs themselves with the same certificate
 ```
+
+The first build creates a self-signed certificate, "CN=VEYL Local Code Signing", in your personal certificate store. Its private key stays on that PC. Every build signs the Windows 11 menu package (`Veyl.Menu.msix`) with it, because Windows won't register an unsigned package. Back the certificate up with its private key (`certmgr.msc` > Personal > Certificates > Export): a build signed with a different certificate can't update the menu package on PCs that already have it.
 
 The build is self-contained: the .NET runtime ships inside VEYL, so target PCs need nothing installed first. The cost is size. `VEYL-Setup.exe` is about 135 MB and the install about 160 MB.
 
@@ -49,7 +55,7 @@ Copy `dist\VEYL-Setup.exe` to the PC and run it. It uses the launcher's look and
 3. Unpacks into `C:\Program Files\VEYL.new` and swaps it in, so a failed copy leaves the old install working.
 4. Creates `C:\ProgramData\VEYL` and lets every user write to the shared signatures and quarantine folders.
 5. Registers the `\VEYL\Launcher` sign-in task (optional).
-6. Adds the Start menu shortcut, "Scan with VEYL" on files and folders in Explorer's right-click menu (optional; on Windows 11 it's under "Show more options"), and a desktop shortcut (optional).
+6. Adds the Start menu shortcut, "Scan with VEYL" and "Run in VEYL sandbox" in Explorer's right-click menu (optional), and a desktop shortcut (optional). On Windows 11 the entries also go in the main menu, not just under "Show more options". That takes a package registration: setup adds VEYL's certificate to the machine's TrustedPeople store (the store Windows checks for app packages, nothing else) and registers `Veyl.Menu.msix` for the user who installs. Other users get it the first time they run VEYL. Uninstall removes the package for every user and the certificate.
 7. Registers in Settings > Apps, where Modify and Uninstall open the setup again.
 8. Verifies the install: hashes every file against `manifest.json` and runs `Veyl.App.exe --selftest`, which loads the engine, scans a file and round-trips a throwaway vault.
 
@@ -113,16 +119,16 @@ Quarantined files are XORed with a random keystream and stored with their origin
 
 ### Sandbox
 
-Right-click a program (or `.bat`/`.cmd`) in Explorer and choose "Run in VEYL sandbox", drop it on Shield → Sandbox, or pick it with "Run a program…". Scripts (`.ps1`, `.vbs`, `.js`) run through their usual host.
+Right-click a program or script in Explorer and choose "Run in VEYL sandbox", drop it on Shield → Sandbox, or pick it with "Run a program…". Scripts (`.ps1`, `.vbs`, `.js`) run through their usual host.
 
 Two layers keep it contained:
 
 1. **Isolation, enforced by Windows.** The program runs with a restricted copy of your token: Administrators is deny-only, privileges are stripped, and the integrity level is Low. Low-integrity processes can't write to your files, to the registry outside `AppDataLow`, or to any normal process, whatever they try. It also runs in a job object that caps it at 64 processes and 4 GB, blocks the clipboard (so it can't read a password you just copied), other windows, display settings and shutdown, and kills the whole tree when the run ends or VEYL closes. After five minutes the run stops itself.
-2. **The monitor, `Veyl.SandboxHook.dll`.** VEYL queues it into the program's first thread before that thread runs, and the monitor follows every child process the same way. It patches a few `ntdll` system-call stubs so that file writes, creates, deletes and renames happen on copies under `%LOCALAPPDATA%Low\VEYL\Sandbox\<run>\drive\` (the program sees its own changes; your files don't change). It also records registry writes, programs started, writes or threads into other processes, driver loads (blocked) and network connections (blocked unless you tick "Allow internet"). When VEYL is elevated it also adds a firewall rule for the program while it runs.
+2. **The monitor, `Veyl.SandboxHook.dll`.** VEYL queues it into the program's first thread before that thread runs, and the monitor follows every child process the same way. 32-bit programs get `Veyl.SandboxHook32.dll` instead. Their 32-bit `kernel32` isn't loaded yet when the process is created, so the queued-call trick doesn't work for them. VEYL adds the monitor to the front of the program's import table instead, the way Microsoft Detours does, and Windows' own loader loads it before any of the program's code runs. Children are followed across both kinds, except that a 32-bit program can't reach into a 64-bit child. It patches a few `ntdll` system-call stubs so that file writes, creates, deletes and renames happen on copies under `%LOCALAPPDATA%Low\VEYL\Sandbox\<run>\drive\` (the program sees its own changes; your files don't change). It also records registry writes, programs started, writes or threads into other processes, driver loads (blocked) and network connections (blocked unless you tick "Allow internet"). When VEYL is elevated it also adds a firewall rule for the program while it runs.
 
 The Sandbox page shows the timeline live and turns it into a verdict: persistence (Run keys, Startup folder, services), code injection, drivers, commands that delete backups or disable Defender, mass file changes, dropped executables and network attempts each add to a score. "Block this file" adds its hash to the signatures, and "Quarantine it" moves it to quarantine. The bin icon deletes the run and everything it wrote.
 
-What it can't do yet: 32-bit programs are isolated but not monitored (the monitor is 64-bit only), registry writes are blocked rather than redirected, so some installers won't work, and `.msi` files aren't supported because the Windows Installer service does the real work outside the sandbox. Installers that bundle an `.msi` unpack and start, then stop with exit code 1631. Programs that demand admin rights start anyway as the sandboxed user, so one that checks for admin may quit early. A program that makes system calls directly can dodge the monitor, but not the isolation. See TODO.md.
+What it can't do yet: 32-bit .NET programs, ARM programs and 64-bit children of 32-bit programs are isolated but not monitored, registry writes are blocked rather than redirected, so some installers won't work, and `.msi` files aren't supported because the Windows Installer service does the real work outside the sandbox. Installers that bundle an `.msi` unpack and start, then stop with exit code 1631. Programs that demand admin rights start anyway as the sandboxed user, so one that checks for admin may quit early. A program that makes system calls directly can dodge the monitor, but not the isolation. See TODO.md.
 
 ### Signatures
 

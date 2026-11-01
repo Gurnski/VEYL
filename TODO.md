@@ -27,7 +27,7 @@ Right-click any `.exe` → "Run in VEYL sandbox". The program runs isolated, VEY
 - [x] Behaviour monitor DLL hooking ntdll: files, registry, child processes (followed and monitored), injection, driver loads, network (blocked)
 - [x] Sandbox page: live timeline, filters, plain-English verdict, "Block this file" and "Quarantine it"
 - [x] Five-minute time limit, Stop button, firewall rule for the program while it runs (when VEYL is elevated)
-- [ ] 32-bit monitor DLL (`Veyl.SandboxHook32.dll`): 32-bit programs are isolated today but their activity isn't recorded
+- [x] 32-bit monitor DLL (`Veyl.SandboxHook32.dll`), loaded through the import table. Still unmonitored: 32-bit .NET, ARM, and 64-bit children of 32-bit programs
 - [ ] Registry redirection into `HKCU\Software\AppDataLow\VEYL\<run>` so installers that write settings keep working (today those writes are blocked and logged)
 - [ ] Follow children launched with a custom environment block (they currently run isolated but unmonitored)
 - [ ] DNS lookups in the network log (today only connection attempts are seen)
@@ -79,7 +79,7 @@ Right-click any `.exe` → "Run in VEYL sandbox". The program runs isolated, VEY
 - [x] Check drag-and-drop by hand while VEYL runs elevated (WM_DROPFILES fallback works)
 - [x] Clearer feedback after dropping a file: toast, named result title, card flash
 - [x] Vault shortcuts: Ctrl+F search, Ctrl+N add, Ctrl+L lock, Esc clears search, double-click copies a password
-- [ ] Windows 11 top-level right-click menu entries with the VEYL logo (`IExplorerCommand` handler DLL plus a signed sparse MSIX package)
+- [x] Windows 11 top-level right-click menu entries with the VEYL logo (`IExplorerCommand` handler DLL plus a signed sparse MSIX package). Signed with a local self-signed certificate for now; a real code-signing certificate before any wider release
 - [ ] Command palette (Ctrl+K) to jump to any page or action
 - [ ] Scan history with per-scan detail pages
 - [ ] Allow-list (trusted files and folders)

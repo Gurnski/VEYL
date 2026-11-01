@@ -52,8 +52,10 @@ static void remove_tree(const std::wstring& dir) {
     RemoveDirectoryW(dir.c_str());
 }
 
-int main() {
-    std::wstring bin = exe_dir();
+// Runs one probe (64-bit or 32-bit) through the sandbox and checks the results.
+static void run_probe(const std::wstring& bin, const wchar_t* probe) {
+    std::printf("== %ls\n", probe);
+    int before = failures;
     wchar_t* lowAppData = nullptr;
     SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0, nullptr, &lowAppData);
     std::wstring root = std::wstring(lowAppData) + L"\\VEYL\\Sandbox\\test-" + std::to_wstring(GetCurrentProcessId());
@@ -75,11 +77,11 @@ int main() {
     std::wstring args = L"\"" + fresh + L"\" \"" + existing + L"\" \"" + victim + L"\"";
     VeylSandbox* sb = nullptr;
     int pid = 0, monitored = 0;
-    int rc = veyl_sandbox_start((bin + L"\\Veyl.SandboxProbe.exe").c_str(), args.c_str(), root.c_str(),
+    int rc = veyl_sandbox_start((bin + L"\\" + probe).c_str(), args.c_str(), root.c_str(),
                                 (bin + L"\\Veyl.SandboxHook.dll").c_str(), 0, &sb, &pid, &monitored);
     CHECK(rc == VEYL_OK);
     CHECK(monitored == 1);
-    if (rc != VEYL_OK) return 1;
+    if (rc != VEYL_OK) return;
 
     int active = 1, total = 0, code = -1;
     for (int i = 0; i < 300 && active > 0; ++i) {
@@ -117,13 +119,35 @@ int main() {
     CHECK(has("\"op\":\"file.delete\""));
     CHECK(has("CurrentVersion\\\\Run") && has("\"result\":\"blocked\""));
     CHECK(has("\"op\":\"proc.create\"") && has("cmd.exe /c exit 7"));
-    CHECK(has("\"monitored\":\"yes\""));
+    // Both children were monitored: the cmd.exe of the probe's own kind, and the 32-bit one.
+    size_t monitored_children = 0;
+    for (size_t at = 0; (at = log.find("\"monitored\":\"yes\"", at)) != std::string::npos; ++at) ++monitored_children;
+    CHECK(monitored_children >= 2);
+    // ...and the 32-bit one reported in from inside (proc.start comes from the monitor in that process).
+    std::string lower_log = log;
+    for (auto& c : lower_log) c = (char)tolower((unsigned char)c);
+    CHECK(lower_log.find("\\\\syswow64\\\\cmd.exe /c exit 8") != std::string::npos);
+    CHECK(lower_log.find("\"op\":\"proc.start\",\"image\":\"c:\\\\windows\\\\syswow64\\\\cmd.exe\"") != std::string::npos);
     CHECK(has("\"op\":\"net.connect\"") && has("1.1.1.1:443"));
-    if (failures) std::printf("---- events.jsonl ----\n%s\n", log.c_str());
+    CHECK(!has("\"op\":\"monitor.gap\""));  // every hook went in
+    if (failures > before) std::printf("---- events.jsonl ----\n%s\n", log.c_str());
 
     DeleteFileW(existing.c_str());
     DeleteFileW(victim.c_str());
     remove_tree(root);
+}
+
+int main() {
+    std::wstring bin = exe_dir();
+    run_probe(bin, L"Veyl.SandboxProbe.exe");
+    // 32-bit: the probe runs under WOW64 with Veyl.SandboxHook32.dll, and its cmd.exe child
+    // is the 32-bit one from SysWOW64, so this also covers 32-bit to 32-bit child injection.
+    if (GetFileAttributesW((bin + L"\\Veyl.SandboxProbe32.exe").c_str()) == INVALID_FILE_ATTRIBUTES) {
+        std::printf("FAIL Veyl.SandboxProbe32.exe is missing (build.ps1 copies it from native\\build32)\n");
+        ++failures;
+    } else {
+        run_probe(bin, L"Veyl.SandboxProbe32.exe");
+    }
     std::printf(failures ? "%d FAILURE(S)\n" : "SANDBOX TESTS PASSED\n", failures);
     return failures ? 1 : 0;
 }

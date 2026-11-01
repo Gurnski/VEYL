@@ -10,6 +10,12 @@ Picked from TODO.md for the next session. TODO.md has the full list.
 - Native tests cover packs. A throwaway C# program also checked the P/Invoke wrappers end to end. `dist\VEYL-Setup.exe` is rebuilt with all of this.
 - Not tested: the Windows 10 path for removing a pack another user's VEYL still has open (it gets renamed to `.removed`). This PC is Windows 11, which just deletes it.
 
+## 0.2.5: built, waiting for an install test
+
+- **Windows 11 main right-click menu.** `Veyl.ShellMenu.dll` (an `IExplorerCommand` handler) in a sparse package, `Veyl.Menu.msix`, signed with the local certificate `build.ps1` created (CN=VEYL Local Code Signing, in your personal certificate store). Setup trusts it in TrustedPeople only and registers the package; other users get it on their first run of VEYL. Not tested yet, because registering needs admin rights. To test: install, right-click an .exe and check that "Run in VEYL sandbox" is in the first menu, then right-click a folder and check for "Scan with VEYL". Then update over it once (Repair), since that's when the menu's dllhost.exe has to be closed.
+- **Back up the certificate** (certmgr.msc > Personal > Certificates > VEYL Local Code Signing > Export, with the private key). Losing it means PCs with the menu can't take updates to the package.
+- **32-bit sandbox monitor.** Done and tested: 64-bit, 32-bit, 64 to 32 and 32 to 32 children all pass. Not covered: 32-bit .NET programs, ARM programs, 64-bit children of 32-bit programs. CCSetup is the real-world test (it exited with 0xC0000409 and VEYL couldn't see why).
+- **Signatures.** Waiting on the sources.
 ## Updates from GitHub: live
 
 - Builds now check `releases/latest/download/manifest.json` on Gurnski/VEYL by default.
@@ -28,10 +34,8 @@ Picked from TODO.md for the next session. TODO.md has the full list.
 
 ## Also queued
 
-- **Windows 11 main right-click menu.** "Scan with VEYL" and "Run in VEYL sandbox" with the VEYL logo in the first menu, not just under "Show more options". Needs a small C++ menu handler DLL (`IExplorerCommand`) registered through a signed sparse MSIX package, with setup trusting a self-signed certificate on this PC. The old entries stay for Windows 10 and "Show more options".
 - **Sandbox regression tests.** Add cases to `Veyl.Sandbox.Tests` for last night's two bugs: a `requireAdministrator` program, and a folder created with an admin-only permission list. Both were only tested by hand.
 - **`.msi` support, moved up.** Many installers are `.msi` underneath (Intel Bluetooth is), and they stop with 1631 in the sandbox today. Needs research: Windows Installer runs as a service outside the sandbox, so the options are reading what the `.msi` would do from its tables without running it, or an admin-mode install inside a throwaway VM-style session.
-- **32-bit monitor DLL.** CCSetup runs but VEYL can't see why it exits with 0xC0000409. A 32-bit build of the monitor (`Veyl.SandboxHook32.dll`) would show that, and covers a lot of older installers.
 - **Registry redirection** in the sandbox, so installers that write settings keep working.
 - **"Files it made" browser** in the sandbox report: open, scan or extract a file the program created.
 

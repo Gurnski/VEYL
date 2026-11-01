@@ -14,6 +14,10 @@
 // Hooks: the first 12 bytes of each Nt* stub become `mov rax, hook; jmp rax`. The
 // "real" function is a small trampoline that loads the syscall number and jumps to
 // the stub's own `syscall` instruction, so the call still enters the kernel from ntdll.
+//
+// The same source builds Veyl.SandboxHook32.dll for 32-bit programs (WOW64). There each stub
+// is `mov eax, ssn; mov edx, Wow64SystemServiceCall; call edx; ret n`, which doesn't depend
+// on where it sits, so the trampoline is a plain copy and the stub starts with `jmp hook`.
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -23,6 +27,8 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+#include "inject32.hpp"
 
 namespace {
 
@@ -46,6 +52,7 @@ constexpr ACCESS_MASK kProcInject = PROCESS_VM_WRITE | PROCESS_CREATE_THREAD | P
 std::wstring g_root;   // Win32 path of this run's sandbox folder, no trailing slash
 std::wstring g_rootLower;
 std::wstring g_dll;    // our own path, for injecting into children
+std::wstring g_dll32;  // the 32-bit monitor, for 32-bit children of a 64-bit program
 bool g_blockNet = true;
 bool g_active = false;
 bool g_sandboxHasFiles = false;  // skip lookups for reads until anything has been redirected
@@ -335,6 +342,35 @@ FileAction plan_file(POBJECT_ATTRIBUTES oa, ACCESS_MASK access, ULONG dispositio
 BYTE* g_stubs = nullptr;
 size_t g_stubUsed = 0;
 
+bool patch_code(BYTE* fn, const BYTE* patch, size_t n) {
+    DWORD old;
+    if (!VirtualProtect(fn, n, PAGE_EXECUTE_READWRITE, &old)) return false;
+    memcpy(fn, patch, n);
+    VirtualProtect(fn, n, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), fn, n);
+    return true;
+}
+
+#if defined(_M_IX86)
+bool install(HMODULE ntdll, const char* name, void* hook, void** real) {
+    BYTE* fn = reinterpret_cast<BYTE*>(GetProcAddress(ntdll, name));
+    // Expected WOW64 stub: B8 <ssn>  BA <Wow64SystemServiceCall>  FF D2  C2 <n> 00  (or C3)
+    if (!fn || fn[0] != 0xB8 || fn[5] != 0xBA || fn[10] != 0xFF || fn[11] != 0xD2 || (fn[12] != 0xC2 && fn[12] != 0xC3)) {
+        log_event("monitor.gap", {{"call", std::wstring(name, name + strlen(name))}});
+        return false;
+    }
+    size_t len = fn[12] == 0xC2 ? 15 : 13;
+    BYTE* t = g_stubs + g_stubUsed;
+    g_stubUsed += 32;
+    memcpy(t, fn, len);
+    *real = t;
+
+    BYTE patch[5] = {0xE9};  // jmp rel32
+    LONG rel = (LONG)((BYTE*)hook - (fn + 5));
+    memcpy(patch + 1, &rel, 4);
+    return patch_code(fn, patch, sizeof patch);
+}
+#else
 bool install(HMODULE ntdll, const char* name, void* hook, void** real) {
     BYTE* fn = reinterpret_cast<BYTE*>(GetProcAddress(ntdll, name));
     // Expected x64 stub: 4C 8B D1  B8 <ssn>  F6 04 25 08 03 FE 7F 01  75 03  0F 05  C3
@@ -355,27 +391,30 @@ bool install(HMODULE ntdll, const char* name, void* hook, void** real) {
 
     BYTE patch[12] = {0x48, 0xB8, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xE0};  // mov rax, hook ; jmp rax
     memcpy(patch + 2, &hook, 8);
-    DWORD old;
-    if (!VirtualProtect(fn, sizeof patch, PAGE_EXECUTE_READWRITE, &old)) return false;
-    memcpy(fn, patch, sizeof patch);
-    VirtualProtect(fn, sizeof patch, old, &old);
-    FlushInstructionCache(GetCurrentProcess(), fn, sizeof patch);
-    return true;
+    return patch_code(fn, patch, sizeof patch);
 }
+#endif
 
 #define REAL(name) name##_t real_##name = nullptr
 
 // ------------------------------------------------------------------ child processes
-// Injects this DLL into a freshly created (suspended) child via an APC on its first thread.
+// Puts the monitor into a freshly created (suspended) child. A 64-bit child gets this DLL
+// through an APC on its first thread; a 32-bit child gets the 32-bit monitor through its
+// import table (see inject32.hpp). The 32-bit monitor can't reach into a 64-bit child.
 bool inject(HANDLE process, HANDLE thread) {
     BOOL wow64 = FALSE;
     IsWow64Process(process, &wow64);
-    if (wow64) return false;  // a 32-bit child can't load a 64-bit DLL
+#if defined(_M_IX86)
+    (void)thread;
+    return wow64 && veyl_inject::add_import32(process, g_dll);
+#else
+    if (wow64) return !g_dll32.empty() && veyl_inject::add_import32(process, g_dll32);
     size_t bytes = (g_dll.size() + 1) * sizeof(wchar_t);
     void* remote = VirtualAllocEx(process, nullptr, bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!remote || !WriteProcessMemory(process, remote, g_dll.c_str(), bytes, nullptr)) return false;
     auto load = reinterpret_cast<PAPCFUNC>(GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW"));
     return QueueUserAPC(load, thread, reinterpret_cast<ULONG_PTR>(remote)) != 0;
+#endif
 }
 
 // ------------------------------------------------------------------ hooks
@@ -502,12 +541,24 @@ NTSTATUS NTAPI hk_NtDeleteFile(POBJECT_ATTRIBUTES oa) {
     return kSuccess;
 }
 
+// FILE_RENAME_INFORMATION, laid out by the compiler so it's right for both pointer sizes.
+struct RenameInfo {
+    union {
+        BOOLEAN ReplaceIfExists;
+        ULONG Flags;
+    };
+    HANDLE RootDirectory;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+};
+constexpr size_t kRenameName = offsetof(RenameInfo, FileName);
+
 NTSTATUS NTAPI hk_NtSetInformationFile(HANDLE h, PIO_STATUS_BLOCK iosb, PVOID info, ULONG len, ULONG cls) {
     Inside in;
     if (!in.first) return real_NtSetInformationFile(h, iosb, info, len, cls);
 
     bool del = (cls == 13 && len >= 1 && *(BOOLEAN*)info) || (cls == 64 && len >= 4 && (*(ULONG*)info & 1));
-    bool rename = (cls == 10 || cls == 65) && len >= 20;
+    bool rename = (cls == 10 || cls == 65) && len >= kRenameName;
     if (!del && !rename) return real_NtSetInformationFile(h, iosb, info, len, cls);
 
     std::wstring self = file_handle_path(h);
@@ -520,23 +571,23 @@ NTSTATUS NTAPI hk_NtSetInformationFile(HANDLE h, PIO_STATUS_BLOCK iosb, PVOID in
         return st;
     }
 
-    // FILE_RENAME_INFORMATION (x64): flags@0, RootDirectory@8, FileNameLength@16, FileName@20
-    BYTE* p = (BYTE*)info;
-    HANDLE root = *(HANDLE*)(p + 8);
-    ULONG nameLen = *(ULONG*)(p + 16);
-    if (20 + (size_t)nameLen > len) return real_NtSetInformationFile(h, iosb, info, len, cls);
-    std::wstring target(reinterpret_cast<wchar_t*>(p + 20), nameLen / sizeof(wchar_t));
+    auto* ri = (RenameInfo*)info;
+    HANDLE root = ri->RootDirectory;
+    ULONG nameLen = ri->FileNameLength;
+    if (kRenameName + (size_t)nameLen > len) return real_NtSetInformationFile(h, iosb, info, len, cls);
+    std::wstring target(ri->FileName, nameLen / sizeof(wchar_t));
     std::wstring targetWin = root ? file_handle_path(root) + L"\\" + target : to_win32(target);
     if (targetWin.empty() || in_sandbox(targetWin)) return real_NtSetInformationFile(h, iosb, info, len, cls);
 
     // Point the rename at the sandboxed copy of the destination.
     std::wstring nt = L"\\??\\" + sandbox_path(targetWin);
     ensure_parent(sandbox_path(targetWin));
-    std::vector<BYTE> buf(20 + nt.size() * sizeof(wchar_t));
-    memcpy(buf.data(), p, 8);
-    *(HANDLE*)(buf.data() + 8) = nullptr;
-    *(ULONG*)(buf.data() + 16) = (ULONG)(nt.size() * sizeof(wchar_t));
-    memcpy(buf.data() + 20, nt.data(), nt.size() * sizeof(wchar_t));
+    std::vector<BYTE> buf(kRenameName + nt.size() * sizeof(wchar_t));
+    auto* out = (RenameInfo*)buf.data();
+    out->Flags = ri->Flags;
+    out->RootDirectory = nullptr;
+    out->FileNameLength = (ULONG)(nt.size() * sizeof(wchar_t));
+    memcpy(out->FileName, nt.data(), nt.size() * sizeof(wchar_t));
     NTSTATUS st = real_NtSetInformationFile(h, iosb, buf.data(), (ULONG)buf.size(), cls);
     if (st == kSuccess) {
         if (!orig.empty()) set_deleted(orig, true);
@@ -607,9 +658,9 @@ NTSTATUS NTAPI hk_NtCreateUserProcess(PHANDLE ph, PHANDLE th, ACCESS_MASK pa, AC
     if (!in.first) return real_NtCreateUserProcess(ph, th, pa, ta, poa, toa, pflags, tflags, params, info, attrs);
     std::wstring image, cmdline;
     if (params) {
-        // RTL_USER_PROCESS_PARAMETERS (x64): ImagePathName @0x60, CommandLine @0x70
-        image = from_us(reinterpret_cast<UNICODE_STRING*>((BYTE*)params + 0x60));
-        cmdline = from_us(reinterpret_cast<UNICODE_STRING*>((BYTE*)params + 0x70));
+        auto* pp = static_cast<RTL_USER_PROCESS_PARAMETERS*>(params);
+        image = from_us(&pp->ImagePathName);
+        cmdline = from_us(&pp->CommandLine);
     }
     const ULONG kSuspended = 0x1;
     NTSTATUS st = real_NtCreateUserProcess(ph, th, pa, ta, poa, toa, pflags, tflags | kSuspended, params, info, attrs);
@@ -758,6 +809,10 @@ void init(HMODULE self) {
     wchar_t path[MAX_PATH];
     GetModuleFileNameW(self, path, MAX_PATH);
     g_dll = path;
+#if !defined(_M_IX86)
+    std::wstring dll32 = g_dll.substr(0, g_dll.find_last_of(L'\\') + 1) + L"Veyl.SandboxHook32.dll";
+    if (GetFileAttributesW(dll32.c_str()) != INVALID_FILE_ATTRIBUTES) g_dll32 = dll32;
+#endif
 
     for (wchar_t d = L'A'; d <= L'Z'; ++d) {
         wchar_t drive[3] = {d, L':', 0}, target[512];
@@ -805,6 +860,10 @@ void init(HMODULE self) {
 }
 
 }  // namespace
+
+// The 32-bit monitor is loaded through the program's import table, which needs an export
+// to import. It does nothing; DllMain does the work.
+extern "C" __declspec(dllexport) void VeylHook() {}
 
 BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {

@@ -12,7 +12,7 @@
 #define VEYL_API extern "C" __declspec(dllimport)
 #endif
 
-#define VEYL_CORE_VERSION "0.2.0"
+#define VEYL_CORE_VERSION "0.2.5"
 
 enum VeylStatus {
     VEYL_OK = 0,

@@ -258,7 +258,7 @@ public sealed unsafe class SandboxProcess : IDisposable
     private IntPtr _handle;
 
     public int Pid { get; }
-    /// <summary>False for 32-bit programs: they're isolated, but their activity isn't recorded yet.</summary>
+    /// <summary>False for 32-bit .NET and ARM64 programs: they're isolated, but their activity isn't recorded.</summary>
     public bool Monitored { get; }
 
     private SandboxProcess(IntPtr handle, int pid, bool monitored)

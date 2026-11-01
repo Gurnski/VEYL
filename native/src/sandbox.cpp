@@ -8,11 +8,14 @@
 //     count and memory are capped, and the clipboard, other windows, display settings
 //     and shutdown are off limits.
 // Visibility: Veyl.SandboxHook.dll is queued into the first thread before it runs, and
-// passes itself on to child processes (see sandbox/hook.cpp).
+// passes itself on to child processes (see sandbox/hook.cpp). 32-bit programs get
+// Veyl.SandboxHook32.dll through their import table instead (sandbox/inject32.hpp).
 #include "common.hpp"
 
 #include <aclapi.h>
 #include <sddl.h>
+
+#include "../sandbox/inject32.hpp"
 
 #pragma comment(lib, "advapi32.lib")
 
@@ -125,19 +128,10 @@ bool label_low(const std::wstring& dir) {
     return rc == ERROR_SUCCESS;
 }
 
-// The monitor DLL is 64-bit only, so it can only follow x64 programs.
-bool is_x64_exe(const std::wstring& exe) {
-    Bytes head;
-    HANDLE h = CreateFileW(exe.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
-    if (h == INVALID_HANDLE_VALUE) return false;
-    head.resize(4096);
-    DWORD got = 0;
-    ReadFile(h, head.data(), (DWORD)head.size(), &got, nullptr);
-    CloseHandle(h);
-    if (got < 0x40 || head[0] != 'M' || head[1] != 'Z') return false;
-    LONG pe = *reinterpret_cast<LONG*>(head.data() + 0x3C);
-    if (pe <= 0 || (DWORD)pe + 6 > got) return false;
-    return *reinterpret_cast<WORD*>(head.data() + pe + 4) == IMAGE_FILE_MACHINE_AMD64;
+// Veyl.SandboxHook32.dll sits next to the 64-bit monitor.
+std::wstring hook32_for(const std::wstring& hook64) {
+    std::wstring p = hook64.substr(0, hook64.find_last_of(L"\\/") + 1) + L"Veyl.SandboxHook32.dll";
+    return GetFileAttributesW(p.c_str()) != INVALID_FILE_ATTRIBUTES ? p : std::wstring();
 }
 
 std::vector<wchar_t> environment(const std::wstring& root, bool block_net) {
@@ -188,7 +182,12 @@ VEYL_API int veyl_sandbox_start(const wchar_t* exe, const wchar_t* args, const w
         return VEYL_ERR_STATE;
     }
 
-    bool monitor = hook_dll && *hook_dll && is_x64_exe(exe);
+    // 64-bit programs get Veyl.SandboxHook.dll, 32-bit ones Veyl.SandboxHook32.dll. Anything
+    // else (ARM64) still runs fully sandboxed, just without the activity log.
+    WORD machine = veyl_inject::exe_machine(exe);
+    std::wstring hook64 = hook_dll ? hook_dll : L"";
+    std::wstring hook32 = hook64.empty() ? L"" : hook32_for(hook64);
+    bool monitor = !hook64.empty() && (machine == IMAGE_FILE_MACHINE_AMD64 || (machine == IMAGE_FILE_MACHINE_I386 && !hook32.empty()));
     std::wstring cmd = L"\"" + std::wstring(exe) + L"\"";
     if (args && *args) cmd += L" " + std::wstring(args);
     std::wstring dir(exe);
@@ -213,7 +212,9 @@ VEYL_API int veyl_sandbox_start(const wchar_t* exe, const wchar_t* args, const w
         delete sb;
         return VEYL_ERR_STATE;
     }
-    if (monitor) monitor = queue_dll(pi.hProcess, pi.hThread, hook_dll);
+    if (monitor)
+        monitor = machine == IMAGE_FILE_MACHINE_I386 ? veyl_inject::add_import32(pi.hProcess, hook32)
+                                                     : queue_dll(pi.hProcess, pi.hThread, hook64);
     ResumeThread(pi.hThread);
     CloseHandle(pi.hThread);
 

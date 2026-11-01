@@ -21,6 +21,9 @@ public sealed class UserSettings
     /// <summary>URLs or file paths of extra hash lists, on top of any in manifest.json.</summary>
     public List<string> SignatureFeeds { get; set; } = [];
 
+    /// <summary>VEYL version whose Windows 11 menu package is registered for this user (see ModernMenu).</summary>
+    public string MenuPackageVersion { get; set; } = "";
+
     public int VaultAutoLockMinutes { get; set; } = 5;
     public int ClipboardClearSeconds { get; set; } = 20;
     public int GeneratorLength { get; set; } = 20;
