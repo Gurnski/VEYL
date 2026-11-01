@@ -9,7 +9,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- Always self-contained so dev builds and the installer ship identical layouts. -->
     <SelfContained>true</SelfContained>
-    <Version>0.2.0</Version>
+    <Version>0.2.1a</Version>
     <Company>VEYL</Company>
     <Product>VEYL</Product>
     <Copyright>Personal use</Copyright>
