@@ -1,0 +1,109 @@
+<!doctype html>
+<!--
+  VEYL Passwords toolbar popup. Design only for now: nothing is wired up.
+
+  Six screens, one shown at a time by <body data-show="...">:
+    ready        VEYL is unlocked and has logins for this site
+    empty        unlocked, nothing saved for this site
+    locked       the vault is locked
+    not-paired   this browser hasn't been allowed to use VEYL yet
+    not-running  VEYL is installed but not running
+    no-host      VEYL isn't installed (Chrome can't find its native messaging host)
+
+  The logins in "ready" are sample rows to show the layout. When this is wired up, the
+  list is built from what VEYL returns: title and username only, never passwords.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=360" />
+  <title>VEYL Passwords</title>
+  <link rel="stylesheet" href="ui.css" />
+</head>
+<body class="popup" data-show="ready">
+  <header class="popup-head">
+    <svg class="veyl-logo" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3,5 L12,21 L21,5 M6.5,5 C9,8.6 15,8.6 17.5,5 M9.6,11.2 C11.2,12.4 12.8,12.4 14.4,11.2" />
+    </svg>
+    <span class="name">VEYL</span>
+    <span class="pill good" data-for="ready empty">Unlocked</span>
+    <span class="pill warn" data-for="locked">Locked</span>
+    <span class="pill off" data-for="not-paired not-running no-host">Not connected</span>
+  </header>
+
+  <!-- ready -->
+  <section data-state="ready">
+    <div class="site">
+      <svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z" /></svg>
+      <div><div class="host">accounts.example.com</div>2 saved logins</div>
+    </div>
+    <ul class="logins">
+      <li class="login">
+        <div class="avatar">E</div>
+        <div class="who"><div class="title">Example</div><div class="user">daniel@example.com</div></div>
+        <button class="btn primary">Fill</button>
+      </li>
+      <li class="login">
+        <div class="avatar">E</div>
+        <div class="who"><div class="title">Example (work)</div><div class="user">d.rea@company.co.uk</div></div>
+        <button class="btn">Fill</button>
+      </li>
+    </ul>
+  </section>
+
+  <!-- empty -->
+  <section data-state="empty">
+    <div class="notice">
+      <div class="glyph"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3" /></svg></div>
+      <h2>Nothing saved for this site</h2>
+      <p>Log in to <b>example.com</b> as usual and VEYL will offer to save it.</p>
+      <button class="btn wide">Open VEYL</button>
+    </div>
+  </section>
+
+  <!-- locked -->
+  <section data-state="locked">
+    <div class="notice">
+      <div class="glyph"><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2" /></svg></div>
+      <h2>Your vault is locked</h2>
+      <p>Unlock it in VEYL with your master password, then open this again.</p>
+      <button class="btn primary wide">Unlock in VEYL</button>
+    </div>
+  </section>
+
+  <!-- not-paired -->
+  <section data-state="not-paired">
+    <div class="notice">
+      <div class="glyph"><svg viewBox="0 0 24 24"><path d="M9 15l6-6M10.5 6.5l1.8-1.8a4.2 4.2 0 0 1 6 6l-1.8 1.8M13.5 17.5l-1.8 1.8a4.2 4.2 0 0 1-6-6l1.8-1.8" /></svg></div>
+      <h2>Connect this browser to VEYL</h2>
+      <p>VEYL will ask you to allow it. You only need to do this once per browser.</p>
+      <button class="btn primary wide">Connect</button>
+    </div>
+  </section>
+
+  <!-- not-running -->
+  <section data-state="not-running">
+    <div class="notice">
+      <div class="glyph"><svg viewBox="0 0 24 24"><path d="M12 3v8M6.3 6.3a8 8 0 1 0 11.4 0" /></svg></div>
+      <h2>VEYL isn't running</h2>
+      <p>Start it and unlock your vault to fill logins.</p>
+      <button class="btn primary wide">Start VEYL</button>
+    </div>
+  </section>
+
+  <!-- no-host -->
+  <section data-state="no-host">
+    <div class="notice">
+      <div class="glyph"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5M10.3 3.9L2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0" /></svg></div>
+      <h2>VEYL isn't installed on this PC</h2>
+      <p>This extension fills logins from the VEYL app. Install VEYL 0.2.5 or newer, then restart the browser.</p>
+    </div>
+  </section>
+
+  <footer class="popup-foot">
+    <span>VEYL Passwords 0.2.5</span>
+    <button class="btn ghost">Open VEYL</button>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>

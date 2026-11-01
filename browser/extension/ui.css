@@ -1,0 +1,255 @@
+/* VEYL Passwords: styles for the toolbar popup and the in-page pieces (field button,
+   login list, save bar). Colours, font and radii follow the app (src/Veyl.Shared/Theme/Theme.xaml).
+   The in-page pieces are meant to live in a closed shadow root, so their class names only
+   need to be unique within VEYL's own UI. */
+
+:root,
+:host {
+  --window: #15121a;
+  --card: #1e1a25;
+  --card-hover: #262130;
+  --card-border: #2a2433;
+  --divider: #241f2c;
+  --raised: #2b2535;
+  --raised-hover: #352e40;
+  --input: #19151f;
+  --input-border: #2e2838;
+
+  --text: #f1edf5;
+  --text-dim: #a39cb0;
+  --text-faint: #6e6779;
+
+  --accent: #eba640;
+  --accent-hover: #f4b85a;
+  --accent-soft: #3a2d1c;
+  --on-accent: #1a1308;
+  --good: #a3d27a;
+  --good-soft: #22301f;
+  --warn: #f2b33d;
+  --warn-soft: #3a2e17;
+  --danger: #f0616d;
+
+  --font: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+* { box-sizing: border-box; }
+
+/* ------------------------------------------------------------------ shared bits */
+.veyl-logo { width: 20px; height: 20px; flex: none; }
+.veyl-logo path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.btn {
+  font: 600 12.5px/1 var(--font);
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--raised);
+  transition: background 0.12s;
+}
+.btn:hover { background: var(--raised-hover); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.ghost { background: transparent; color: var(--text-dim); }
+.btn.ghost:hover { background: var(--raised); color: var(--text); }
+.btn.wide { width: 100%; padding: 10px 12px; }
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font: 700 12px/1 var(--font);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 11px/1 var(--font);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.good { color: var(--good); background: var(--good-soft); }
+.pill.warn { color: var(--warn); background: var(--warn-soft); }
+.pill.off { color: var(--text-faint); background: var(--raised); }
+
+/* ------------------------------------------------------------------ toolbar popup */
+/* One screen at a time: <body data-show="locked"> shows <section data-state="locked">,
+   and header pills say which screens they belong to with data-for="ready empty". */
+.popup > section[data-state] { display: none; }
+.popup[data-show="ready"] > section[data-state="ready"],
+.popup[data-show="empty"] > section[data-state="empty"],
+.popup[data-show="locked"] > section[data-state="locked"],
+.popup[data-show="not-paired"] > section[data-state="not-paired"],
+.popup[data-show="not-running"] > section[data-state="not-running"],
+.popup[data-show="no-host"] > section[data-state="no-host"] { display: block; }
+.popup [data-for] { display: none; }
+.popup[data-show="ready"] [data-for~="ready"],
+.popup[data-show="empty"] [data-for~="empty"],
+.popup[data-show="locked"] [data-for~="locked"],
+.popup[data-show="not-paired"] [data-for~="not-paired"],
+.popup[data-show="not-running"] [data-for~="not-running"],
+.popup[data-show="no-host"] [data-for~="no-host"] { display: inline-flex; }
+
+.popup {
+  width: 360px;
+  margin: 0;
+  font: 13px/1.4 var(--font);
+  color: var(--text);
+  background: var(--window);
+}
+
+.popup-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--divider);
+}
+.popup-head .name { font-weight: 700; letter-spacing: 0.02em; flex: 1; }
+
+.site {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.site .host { color: var(--text); font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site .lock { width: 12px; height: 12px; flex: none; }
+.site .lock path { fill: none; stroke: var(--good); stroke-width: 2; stroke-linecap: round; }
+
+.logins { list-style: none; margin: 0; padding: 6px 10px 10px; display: grid; gap: 4px; }
+.login {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius);
+}
+.login:hover { background: var(--card-hover); }
+.login .who { flex: 1; min-width: 0; }
+.login .title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.login .user { color: var(--text-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A screen with one message and one action: locked, not connected, not running... */
+.notice { padding: 26px 24px 22px; text-align: center; }
+.notice .glyph {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 12px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+}
+.notice .glyph svg { width: 22px; height: 22px; }
+.notice .glyph path { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.notice h2 { font-size: 15px; margin: 0 0 6px; }
+.notice p { margin: 0 0 16px; color: var(--text-dim); font-size: 12.5px; }
+.notice code { font: 11.5px var(--mono); color: var(--text); background: var(--raised); padding: 1px 5px; border-radius: 4px; }
+
+.popup-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-top: 1px solid var(--divider);
+  color: var(--text-faint);
+  font-size: 11.5px;
+}
+.popup-foot span { padding-left: 6px; }
+
+/* ------------------------------------------------------------------ in-page: field button */
+.field-button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--card-border);
+}
+.field-button:hover { background: var(--raised); }
+.field-button .veyl-logo { width: 14px; height: 14px; }
+
+/* ------------------------------------------------------------------ in-page: login list */
+.menu {
+  width: 300px;
+  font: 13px/1.4 var(--font);
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.menu-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--divider);
+}
+.menu-head .veyl-logo { width: 14px; height: 14px; }
+.menu-head b { color: var(--text); font-weight: 600; }
+.menu .logins { padding: 4px; gap: 0; }
+.menu .login { cursor: pointer; padding: 8px 10px; }
+.menu .login.active { background: var(--raised); }
+.menu .login .avatar { width: 26px; height: 26px; font-size: 11px; border-radius: 7px; }
+.menu-empty { padding: 14px 14px 12px; color: var(--text-dim); font-size: 12.5px; }
+.menu-empty .btn { margin-top: 10px; }
+.menu-foot { padding: 8px 12px; border-top: 1px solid var(--divider); }
+.menu-foot a { color: var(--accent); text-decoration: none; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* ------------------------------------------------------------------ in-page: save bar */
+.savebar {
+  width: 340px;
+  font: 13px/1.4 var(--font);
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  padding: 14px 14px 12px;
+}
+.savebar-head { display: flex; align-items: center; gap: 10px; }
+.savebar-head .text { flex: 1; min-width: 0; }
+.savebar-head .title { font-weight: 700; }
+.savebar-head .sub { color: var(--text-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.savebar .close {
+  width: 26px; height: 26px; border: 0; border-radius: 6px; cursor: pointer;
+  background: transparent; color: var(--text-faint); font: 16px/1 var(--font);
+}
+.savebar .close:hover { background: var(--raised); color: var(--text); }
+.savebar-fields {
+  margin: 12px 0;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+}
+.savebar-fields div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 10px; font-size: 12px; }
+.savebar-fields div + div { border-top: 1px solid var(--input-border); }
+.savebar-fields span { color: var(--text-faint); }
+.savebar-fields b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.savebar-fields .dots { letter-spacing: 2px; }
+.savebar-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.savebar-actions .btn.ghost { margin-right: auto; padding-left: 4px; }
