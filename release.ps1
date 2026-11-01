@@ -98,9 +98,10 @@ if ($exists) {
 }
 else {
     Step "Publishing $tag"
-    $notes = if ($NotesFile) { @("--notes-file", $NotesFile) } else { @("--generate-notes") }
     # Not a draft or pre-release: releases/latest/download/ skips both, so installed copies wouldn't see it.
-    & $gh release create $tag $setup $releaseManifest --repo $repo --target $head --title "VEYL $version" @notes --latest
+    [string[]]$ghArgs = @("release", "create", $tag, $setup, $releaseManifest, "--repo", $repo, "--target", $head, "--title", "VEYL $version", "--latest")
+    if ($NotesFile) { $ghArgs += @("--notes-file", $NotesFile) } else { $ghArgs += "--generate-notes" }
+    & $gh $ghArgs
     if ($LASTEXITCODE) { throw "Release failed" }
 }
 
